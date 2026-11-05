@@ -357,6 +357,55 @@ textarea.editor { width: 100%; min-height: 90px; font: inherit; font-size: 14px;
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
 }
 .inline-form select { flex: 1; min-width: 0; }
+
+/* ---------- ZUSCHNITT PRO BEWERBUNG ---------- */
+.tailor-body { margin-left: calc(var(--datecol) + 14px); max-width: 700px; }
+.tailor-intro { font-size: 16px; line-height: 1.7; white-space: pre-line; margin: 2px 0 0; }
+.tailor-sub { font-size: 13px; font-style: italic; color: var(--soft); margin: 22px 0 10px; }
+.matches { margin-top: 4px; }
+.match { border-left: 3px solid var(--bar); padding: 1px 0 1px 14px; margin: 0 0 16px; }
+.match-req { font-weight: 700; font-size: 14.5px; line-height: 1.4; }
+.match-ans { font-size: 14.5px; line-height: 1.55; margin-top: 2px; white-space: pre-line; }
+.match .sk-go { margin-top: 7px; font-size: 13.5px; }
+.tailor-hint { font-size: 12.5px; font-style: italic; color: var(--soft); margin-top: 6px; }
+
+.relmark { font-size: 12px; font-style: italic; line-height: 1.3; color: var(--ring); margin: 0 0 1px; }
+.relmark.inline { display: inline-block; margin: 0 0 0 10px; font-weight: 400; vertical-align: middle; }
+.entry.rel { box-shadow: inset 3px 0 0 var(--bar); }
+.subsection.rel > summary { box-shadow: inset 3px 0 0 var(--bar); padding-left: 12px; }
+.rel-skill { font-weight: 700; }
+span.rel-skill { border-bottom: 2px solid var(--bar); }
+.skilllink.rel-skill { border-bottom: 2px solid var(--bar); }
+
+.tailor-pill { font-size: 12px; font-style: italic; color: var(--soft); margin-top: 2px; }
+textarea.tailor-json { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; min-height: 280px; white-space: pre; overflow: auto; line-height: 1.45; }
+.tailor-report { margin-top: 4px; font-size: 13.5px; }
+.tailor-report .error-msg { margin-bottom: 10px; }
+.tailor-report ul.cvlist { font-size: 13px; margin-top: 4px; }
+.tailor-warn, .tailor-ok { border: 1px solid var(--line); border-radius: var(--radius); padding: 9px 12px; margin-bottom: 10px; font-size: 13px; }
+.tailor-warn { background: #fbf6e6; border-color: #d8c98c; }
+.tailor-ok { background: #eef5ef; border-color: #a9c9b0; }
+.tailor-ref { margin-top: 14px; font-size: 13px; }
+.tailor-ref summary { cursor: pointer; color: var(--soft); font-style: italic; }
+.tailor-ref table { margin-top: 8px; }
+
+@media (max-width: 680px) {
+  .tailor-body { margin-left: 0; }
+  .relmark.inline { display: block; margin: 2px 0 0; }
+}
+
+.match .sk-go.match-go { display: inline; border-bottom: 0; padding: 0; text-align: left; }
+.match-go .lbl { border-bottom: 1px solid var(--ink); }
+.match-go svg { vertical-align: -3px; display: inline-block; }
+.match-go:hover .lbl { background: var(--hover); }
+.entry.rel { border-radius: 0; }
+
+/* Bewerbungspaket: Passwort nach dem Anlegen */
+.tailor-created { background: #eef5ef; border: 1px solid #a9c9b0; border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; font-size: 13.5px; }
+.tailor-created .pw-line { margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.tailor-created .pw-big { font-size: 17px; font-weight: 700; letter-spacing: .02em; background: #fff; border: 1px solid #a9c9b0; border-radius: 4px; padding: 3px 9px; user-select: all; }
+
+.tailor-ref .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 </style>
 </head>
 <body>
@@ -618,6 +667,9 @@ const NEW_H2_SIM = {
   bullets: []
 };
 
+const FASTTUBE_STORY_V1 = "Drei Jahre im Formula-Student-Team der TU Berlin — zuerst als Mitglied, zuletzt als Fertigungs-, Werkstatt- und Sponsoringleiter. 2023 haben wir mit einem selbst entwickelten Rennwagen drei Podiumsplätze geholt. Die Erfahrung hat mir gezeigt, was es bedeutet, mit 40 Studierenden ein komplexes Fahrzeugprojekt unter Zeitdruck auf die Strecke zu bringen.";
+const FASTTUBE_STORY_V2 = "Drei Jahre im Formula-Student-Team der TU Berlin (FaSTTUBe): 2021 als Teammitglied in der Motorapplikation am Prüfstand, 2022 als Head of Mission Legacy bei der FSAE Michigan, 2023 als Fertigungs-, Werkstatt- und Sponsoringleiter. Rund 40 Studierende bauen hier unbezahlt einen eigenen Rennwagen. Führen heißt deshalb vor allem koordinieren und motivieren.\n\nGeprägt hat mich 2022 die Woche, in der uns das Fahrzeug eine Woche vor dem Abflug in die USA abbrannte und wir es mit über 100 Helfern wieder zum Laufen brachten. 2023 haben wir mit einem selbst entwickelten Rennwagen drei Podiumsplätze geholt. Die Erfahrung hat mir gezeigt, was es bedeutet, mit 40 Studierenden ein komplexes Fahrzeugprojekt unter Zeitdruck auf die Strecke zu bringen.";
+
 const NEW_FASTTUBE_SECTIONS = [
   {
     id: "motor21",
@@ -634,19 +686,25 @@ const NEW_FASTTUBE_SECTIONS = [
   {
     id: "fertigung",
     title: "Fertigungsleitung (2023)",
-    text: "2023 war ich verantwortlich für Fertigung, Werkstatt und Sponsoring. Meine Rolle lag in der Mitte: Die Technische Leitung sagt, was gewollt ist, die Konstrukteure, was möglich wäre, und die Fertiger, was wir am Ende wirklich fertigen lassen können. Ich habe das zusammengeführt, Kapazitäten intern und extern geplant und angeregt, Teile zu vereinfachen oder selbst zu fertigen, wenn es Geld oder Zeit sparte. Und wenn sich Gewicht am Fahrzeug sparen ließ, habe ich den Mehraufwand eingefordert. Die CAM-Programme für die Maschinen habe ich in Fusion 360 erstellt.\n\nErgebnis: 2. Platz FS Netherlands, 3. Platz FS Czech, 3. Platz FS Alpe Adria.",
+    text: "2023 war ich verantwortlich für Fertigung, Werkstatt und Sponsoring. Meine Rolle lag in der Mitte: Die Technische Leitung sagt, was gewollt ist, die Konstrukteure im Team, was möglich wäre, und die Fertiger, was wir am Ende wirklich fertigen lassen können. Ich war die Schnittstelle zwischen diesen dreien.\n\nDazu gehörte, die Ressourcen und Fertigungskapazitäten zu verwalten, intern wie extern. Wo es aus finanziellen oder zeitlichen Gründen sinnvoll war, habe ich angeregt, Teile zu vereinfachen oder im Haus selbst zu fertigen. Und wenn sich bei einem Bauteil die Möglichkeit zu einer Gewichtsersparnis am Fahrzeug ergab, habe ich bewusst zu Mehraufwand angeregt.\n\nDie CAM-Programme für unsere Maschinen habe ich in Fusion 360 erstellt. Es war für uns kostenlos nutzbar und bietet eine riesige Bandbreite an Postprozessoren, sodass G-Code und Maschine sehr zuverlässig zusammenpassen.\n\nIm Kern war das Leitung, Koordination und Motivation unbezahlter Arbeitskräfte.\n\nErgebnis: 2. Platz FS Netherlands, 3. Platz FS Czech, 3. Platz FS Alpe Adria.",
+    bullets: []
+  },
+  {
+    id: "werkstatt",
+    title: "Werkstatt, Kran und Hochvolt",
+    text: "Als Werkstattleiter habe ich den Umbau der Werkstatt koordiniert, damit sich die Leute dort selbst verwirklichen können.\n\nMit dem Kranschein habe ich bei FaSTTUBe schwere und große Lasten per Deckenkran von einer Etage zur anderen transportiert.\n\nDie 1E-Schulung gehört ebenfalls dazu, denn bei FaSTTUBe ging es, wie auch bei Porsche in Weissach, um den Umgang mit Hochvolt-Prototypenfahrzeugen.",
     bullets: []
   },
   {
     id: "teams",
     title: "Unbezahlte Teams führen und motivieren",
-    text: "Alle im Team arbeiten freiwillig und unbezahlt. Deshalb habe ich dafür gesorgt, dass man einander fragt, wo Unterstützung gebraucht wird, und dass alle über die Entwicklungsstände Bescheid wissen. So ließen sich unterstützende Tätigkeiten bereichsübergreifend koordinieren.\n\nFür den gemeinsamen Sport habe ich einen separaten Personal Trainer organisiert. Den Umbau der Werkstatt habe ich koordiniert, damit sich Leute dort selbst verwirklichen können. Junge, motivierte Studierende habe ich an Dreh- und Fräsmaschine angelernt, um ihre Fähigkeiten, ihr Selbstbewusstsein und das gegenseitige Vertrauen zu stärken.",
+    text: "Rund 40 Studierende arbeiten bei FaSTTUBe freiwillig und unbezahlt. Deshalb habe ich dafür gesorgt, dass man einander fragt, wo Unterstützung gebraucht wird. Dafür musste ich über die Entwicklungsstände in den Bereichen Bescheid wissen, um unterstützende Tätigkeiten bereichsübergreifend zu koordinieren.\n\nFür den gemeinsamen Sport habe ich einen separaten Personal Trainer organisiert.\n\nIn der Werkstatt habe ich junge, motivierte Studierende an Dreh- und Fräsmaschine angelernt. So konnten sie weitere Fähigkeiten erlangen, und das hat Selbstbewusstsein und Vertrauen gestärkt.",
     bullets: []
   },
   {
     id: "stress",
     title: "Kommunikation unter Stress",
-    text: "Vor den Wettbewerben steigt der Druck. Ich beobachte dann, wie sich Leute im Team verhalten, und überlege, was das für die Zusammenarbeit bedeuten könnte, bevor etwas eskaliert.\n\nStress abgebaut haben wir durch Einzelgespräche, in denen ich bei gemeinsam festgestellter Überlastung auch direkt Arbeit abgenommen habe, durch gemeinsamen Sport, Kochen und Essen und durch Kaffeepausen. Eine Siebträgermaschine, die wir per teaminternem Crowdfunding angeschafft haben, war ein echter Teamgeist-Booster.",
+    text: "Vor den Wettbewerben stieg der Druck. Ich habe dann beobachtet, wie sich Leute im Team verhalten, und überlegt, was das für die Zusammenarbeit bedeuten könnte, bevor etwas eskaliert.\n\nWenn wir gemeinsam festgestellt haben, dass jemand überlastet ist, habe ich im Gespräch direkt Arbeit abgenommen. Daneben haben gemeinsamer Sport, Kochen und Essen und Kaffeepausen den Druck abgebaut. Die Siebträgermaschine, die wir per teaminternem Crowdfunding angeschafft haben, war ein starker Teamgeist-Booster und Stressreduzierer.",
     bullets: []
   }
 ];
@@ -670,21 +728,22 @@ const ABITUR_STORY = "Am Beethoven-Gymnasium habe ich in der 10. Klasse an einem
 const DEFAULT_SKILL_PAGES = {
   "Projektmanagement": {
     blocks: [
-      { ref: "fasttube", sub: "michigan", text: "Bei FaSTTUBe habe ich 2022 die Teilnahme an der FSAE Michigan geleitet und zwischen allen Modulen und der TU koordiniert. Als das Fahrzeug eine Woche vor dem Abflug abbrannte, habe ich mir einen Überblick verschafft, eine Aufgabenliste erstellt und über 100 Helfer koordiniert." },
+      { ref: "fasttube", sub: "michigan", text: "Bei FaSTTUBe habe ich 2022 die Teilnahme an der FSAE Michigan geleitet und zwischen allen Modulen und der TU koordiniert. Als das Fahrzeug eine Woche vor dem Abflug abbrannte, habe ich mir einen Überblick verschafft, eine Aufgabenliste erstellt und über 100 Helfer koordiniert. Am Ende der Woche stand wieder ein Fahrzeug mit laufendem Motor da." },
       { ref: "fasttube", sub: "fertigung", text: "2023 war ich als Fertigungsleiter die Schnittstelle zwischen Technischer Leitung (was gewollt ist), Konstrukteuren (was möglich wäre) und Fertigern (was wir am Ende wirklich fertigen lassen können). Dabei habe ich Ressourcen und Fertigungskapazitäten intern und extern verwaltet und Vereinfachungen oder Inhouse-Fertigung angeregt, wenn Geld oder Zeit knapp waren. Sah ich die Chance auf Gewichtsersparnis am Fahrzeug, habe ich für den Mehraufwand geworben. Alle im Team arbeiten unbezahlt, Leitung bedeutet hier vor allem Koordination und Motivation." }
     ]
   },
   "Teamleitung": {
     blocks: [
       { ref: "fasttube", sub: "michigan", text: "2022 habe ich als Head of Mission Legacy das Team für die FSAE Michigan geleitet. In der unmittelbaren Vorbereitung vor Ort waren wir acht Personen, der Großteil des Teams arbeitete aus Berlin zu. Über die Zeitverschiebung entstand eine Art Schichtsystem." },
-      { ref: "fasttube", sub: "teams", text: "Im Team von rund 40 Studierenden arbeiten alle unbezahlt. Führen heißt hier: einander fragen, wo Unterstützung gebraucht wird, die Entwicklungsstände kennen, unterstützende Tätigkeiten koordinieren und Leute fördern, zum Beispiel durch das Anlernen an Dreh- und Fräsmaschine." },
+      { ref: "fasttube", sub: "teams", text: "Im Team von rund 40 Studierenden arbeiten alle unbezahlt. Führen heißt hier: einander fragen, wo Unterstützung gebraucht wird, die Entwicklungsstände kennen und unterstützende Tätigkeiten bereichsübergreifend koordinieren. Außerdem habe ich einen Personal Trainer für den gemeinsamen Sport organisiert und junge, motivierte Studierende an Dreh- und Fräsmaschine angelernt, um Fähigkeiten, Selbstbewusstsein und Vertrauen zu stärken." },
+      { ref: "fasttube", sub: "werkstatt", text: "Als Werkstattleiter habe ich den Umbau der Werkstatt koordiniert, damit sich die Leute dort selbst verwirklichen können." },
       { ref: "boxen", text: "Im Boxtraining geht es um sensible Themen wie Ernährung und darum, andere zu motivieren, an ihre Grenzen zu gehen und dranzubleiben, wenn es wehtut. Danach blickt man gemeinsam stolz auf das Erreichte zurück." }
     ]
   },
   "Kommunikation": {
     blocks: [
       { ref: "equeo", text: "Bei equeo ging es um Offenheit und Zuhören: Probleme verstehen und gemeinsam Möglichkeiten finden." },
-      { ref: "fasttube", sub: "stress", text: "Unter Zeitdruck vor den Wettbewerben habe ich das Verhalten im Team beobachtet und mögliche Auswirkungen analysiert. Abgebaut haben wir Stress durch Einzelgespräche, gemeinsamen Sport, Kochen und Essen und Kaffeepausen." },
+      { ref: "fasttube", sub: "stress", text: "Unter Zeitdruck vor den Wettbewerben habe ich das Verhalten im Team beobachtet und mögliche Auswirkungen analysiert. Bei gemeinsam festgestellter Überlastung habe ich im Gespräch direkt Arbeit abgenommen. Abgebaut haben wir Stress außerdem durch gemeinsamen Sport, Kochen und Essen, Kaffeepausen und eine Siebträgermaschine, die wir per Crowdfunding im Team angeschafft haben." },
       { ref: "polizei", text: "Beim dualen Studium bei der Polizei stand die Deeskalation von Konflikten im Mittelpunkt." }
     ]
   },
@@ -738,17 +797,187 @@ const DEFAULT_SKILL_PAGES = {
   "1E-Schulung": {
     blocks: [
       { ref: "porsche", text: "Bei Porsche in Weissach brauchte ich die 1E-Schulung für den Umgang mit Hochvolt-Prototypenfahrzeugen." },
-      { ref: "fasttube", text: "Auch bei FaSTTUBe ging es um den Umgang mit Hochvolt-Prototypenfahrzeugen." }
+      { ref: "fasttube", sub: "werkstatt", text: "Auch bei FaSTTUBe ging es um den Umgang mit Hochvolt-Prototypenfahrzeugen." }
     ]
   },
   "Kranschein": {
     blocks: [
       { ref: "h2", text: "Bei H2 Power 'n' Heat transportiere ich damit schwere und große Lasten per Deckenkran von einer Etage zur anderen." },
-      { ref: "fasttube", text: "Auch bei FaSTTUBe habe ich damit schwere und große Lasten per Deckenkran von einer Etage zur anderen transportiert." }
+      { ref: "fasttube", sub: "werkstatt", text: "Auch bei FaSTTUBe habe ich damit schwere und große Lasten per Deckenkran von einer Etage zur anderen transportiert." }
     ]
   }
 };
 
+/* Porsche: Aufgabengebiet laut Praktikumszeugnis (Patch "porsche-tasks-v1") */
+const PORSCHE_BULLET_V1 = "Versuchsvorbereitung, -durchführung und -nachbereitung";
+const PORSCHE_TASKS = [
+  "Unterstützung bei Vorbereitung, Durchführung und Nachbereitung von Gesamtfahrzeugversuchen",
+  "Unterstützung des Erprobungsbetriebs durch Prototypen-Teile-Management, von SAP-Auftragswesen bis zur Werkstattkoordination",
+  "Unterstützung bei Ausrüstung und Inbetriebnahme von Messtechnik in Versuchsfahrzeugen sowie Begleitung und Auswertung von Messungen",
+  "Mitarbeit bei der Entwicklung eines MATLAB-Skripts zur automatisierten Auswertung von Messdaten"
+];
+
+/* ETAS: Aufgabengebiet laut Tätigkeitsbeschreibung (Patch "etas-tasks-v1") */
+const ETAS_BULLET_V1 = "Erstellung von How-To-Videos für ETAS-Software";
+const ETAS_TASKS = [
+  "Unterstützung im Produktmanagement der Softwareprodukte INCA-FLOW und INCA-RDE",
+  "Erstellung von Klickanleitungen",
+  "Erstellung und Überarbeitung von Videoanleitungen",
+  "Erstellung und Überarbeitung von Produktpräsentationen"
+];
+
+/* Stand vor dem Ausbau (Patch "fasttube-expand-v1"): nur unveränderte Texte werden ersetzt */
+const FASTTUBE_V1 = {
+ "story": "Drei Jahre im Formula-Student-Team der TU Berlin — zuerst als Mitglied, zuletzt als Fertigungs-, Werkstatt- und Sponsoringleiter. 2023 haben wir mit einem selbst entwickelten Rennwagen drei Podiumsplätze geholt. Die Erfahrung hat mir gezeigt, was es bedeutet, mit 40 Studierenden ein komplexes Fahrzeugprojekt unter Zeitdruck auf die Strecke zu bringen.",
+ "sections": {
+  "fertigung": "2023 war ich verantwortlich für Fertigung, Werkstatt und Sponsoring. Meine Rolle lag in der Mitte: Die Technische Leitung sagt, was gewollt ist, die Konstrukteure, was möglich wäre, und die Fertiger, was wir am Ende wirklich fertigen lassen können. Ich habe das zusammengeführt, Kapazitäten intern und extern geplant und angeregt, Teile zu vereinfachen oder selbst zu fertigen, wenn es Geld oder Zeit sparte. Und wenn sich Gewicht am Fahrzeug sparen ließ, habe ich den Mehraufwand eingefordert. Die CAM-Programme für die Maschinen habe ich in Fusion 360 erstellt.\n\nErgebnis: 2. Platz FS Netherlands, 3. Platz FS Czech, 3. Platz FS Alpe Adria.",
+  "teams": "Alle im Team arbeiten freiwillig und unbezahlt. Deshalb habe ich dafür gesorgt, dass man einander fragt, wo Unterstützung gebraucht wird, und dass alle über die Entwicklungsstände Bescheid wissen. So ließen sich unterstützende Tätigkeiten bereichsübergreifend koordinieren.\n\nFür den gemeinsamen Sport habe ich einen separaten Personal Trainer organisiert. Den Umbau der Werkstatt habe ich koordiniert, damit sich Leute dort selbst verwirklichen können. Junge, motivierte Studierende habe ich an Dreh- und Fräsmaschine angelernt, um ihre Fähigkeiten, ihr Selbstbewusstsein und das gegenseitige Vertrauen zu stärken.",
+  "stress": "Vor den Wettbewerben steigt der Druck. Ich beobachte dann, wie sich Leute im Team verhalten, und überlege, was das für die Zusammenarbeit bedeuten könnte, bevor etwas eskaliert.\n\nStress abgebaut haben wir durch Einzelgespräche, in denen ich bei gemeinsam festgestellter Überlastung auch direkt Arbeit abgenommen habe, durch gemeinsamen Sport, Kochen und Essen und durch Kaffeepausen. Eine Siebträgermaschine, die wir per teaminternem Crowdfunding angeschafft haben, war ein echter Teamgeist-Booster."
+ },
+ "skillBlocks": [
+  {
+   "key": "Projektmanagement",
+   "ref": "fasttube",
+   "sub": "michigan",
+   "old": "Bei FaSTTUBe habe ich 2022 die Teilnahme an der FSAE Michigan geleitet und zwischen allen Modulen und der TU koordiniert. Als das Fahrzeug eine Woche vor dem Abflug abbrannte, habe ich mir einen Überblick verschafft, eine Aufgabenliste erstellt und über 100 Helfer koordiniert.",
+   "text": "Bei FaSTTUBe habe ich 2022 die Teilnahme an der FSAE Michigan geleitet und zwischen allen Modulen und der TU koordiniert. Als das Fahrzeug eine Woche vor dem Abflug abbrannte, habe ich mir einen Überblick verschafft, eine Aufgabenliste erstellt und über 100 Helfer koordiniert. Am Ende der Woche stand wieder ein Fahrzeug mit laufendem Motor da."
+  },
+  {
+   "key": "Teamleitung",
+   "ref": "fasttube",
+   "sub": "teams",
+   "old": "Im Team von rund 40 Studierenden arbeiten alle unbezahlt. Führen heißt hier: einander fragen, wo Unterstützung gebraucht wird, die Entwicklungsstände kennen, unterstützende Tätigkeiten koordinieren und Leute fördern, zum Beispiel durch das Anlernen an Dreh- und Fräsmaschine.",
+   "text": "Im Team von rund 40 Studierenden arbeiten alle unbezahlt. Führen heißt hier: einander fragen, wo Unterstützung gebraucht wird, die Entwicklungsstände kennen und unterstützende Tätigkeiten bereichsübergreifend koordinieren. Außerdem habe ich einen Personal Trainer für den gemeinsamen Sport organisiert und junge, motivierte Studierende an Dreh- und Fräsmaschine angelernt, um Fähigkeiten, Selbstbewusstsein und Vertrauen zu stärken."
+  },
+  {
+   "key": "Kommunikation",
+   "ref": "fasttube",
+   "sub": "stress",
+   "old": "Unter Zeitdruck vor den Wettbewerben habe ich das Verhalten im Team beobachtet und mögliche Auswirkungen analysiert. Abgebaut haben wir Stress durch Einzelgespräche, gemeinsamen Sport, Kochen und Essen und Kaffeepausen.",
+   "text": "Unter Zeitdruck vor den Wettbewerben habe ich das Verhalten im Team beobachtet und mögliche Auswirkungen analysiert. Bei gemeinsam festgestellter Überlastung habe ich im Gespräch direkt Arbeit abgenommen. Abgebaut haben wir Stress außerdem durch gemeinsamen Sport, Kochen und Essen, Kaffeepausen und eine Siebträgermaschine, die wir per Crowdfunding im Team angeschafft haben."
+  },
+  {
+   "key": "1E-Schulung",
+   "ref": "fasttube",
+   "sub": null,
+   "old": "Auch bei FaSTTUBe ging es um den Umgang mit Hochvolt-Prototypenfahrzeugen.",
+   "text": "Auch bei FaSTTUBe ging es um den Umgang mit Hochvolt-Prototypenfahrzeugen.",
+   "newSub": "werkstatt"
+  },
+  {
+   "key": "Kranschein",
+   "ref": "fasttube",
+   "sub": null,
+   "old": "Auch bei FaSTTUBe habe ich damit schwere und große Lasten per Deckenkran von einer Etage zur anderen transportiert.",
+   "text": "Auch bei FaSTTUBe habe ich damit schwere und große Lasten per Deckenkran von einer Etage zur anderen transportiert.",
+   "newSub": "werkstatt"
+  }
+ ],
+ "addBlocks": [
+  {
+   "key": "Teamleitung",
+   "afterRef": "fasttube",
+   "afterSub": "teams",
+   "block": {
+    "ref": "fasttube",
+    "sub": "werkstatt",
+    "text": "Als Werkstattleiter habe ich den Umbau der Werkstatt koordiniert, damit sich die Leute dort selbst verwirklichen können."
+   }
+  }
+ ]
+};
+
+/* ---- Studium: Module (Inhalte aus den Modulhandbüchern, Noten aus der Studiendokumentation; Stand 11/2026) ---- */
+const STUDIUM_MASTER_SECTIONS = [
+  {
+    id: "bestanden",
+    title: "Bereits bestandene Module",
+    text: "Vier Fachmodule habe ich im Sommersemester 2026 bestanden (20 LP, dazu 5 LP Studium Generale). Der Durchschnitt aller bisher bestandenen Module liegt bei 1,74.",
+    bullets: [
+      "Planung und Betrieb von Windkraftwerken (2,7): Windressource, Anlagentechnik, Standortplanung, Ertrags- und Wirtschaftlichkeitsberechnung, Genehmigung, Betriebsführung und Anforderungen der Netzbetreiber. In der Übung werden Teilschritte eines Windprojekts durchgearbeitet.",
+      "Solartechnik – Anwendung und Simulation (2,0): Solarstrahlung, Auslegung solarthermischer und Photovoltaik-Anlagen, Simulationssoftware. Die Übung (1,0) umfasst Parabolrinne und die Simulation von Solaranlagen.",
+      "Biomasse und nachwachsende Rohstoffe, Projekt (1,7): Bioenergieanlagen, Biogas, Biokraftstoffe, Wirtschaftlichkeit, Stoffstromanalyse, Technologieauswahl und Sensitivitätsanalyse. Im Projekt wird eine Biomasseanlage ausgelegt, samt Projektmanagement mit Projektstrukturplan, Terminplan, Netzplan und Meilensteintrendanalyse.",
+      "Ausgewählte Kapitel der Prozessverfahrenstechnik (1,3): Prozesssimulation, Prozessregelung, Anlagensicherheit und Explosionsschutz, FMEA und Umweltverträglichkeitsprüfung."
+    ]
+  }
+];
+
+const STUDIUM_BACHELOR_SECTIONS = [
+  {
+    id: "ee-wahl",
+    title: "Wahlbereich Erneuerbare Energien",
+    text: "Vier Module im Wahlbereich, alle bestanden.",
+    bullets: [
+      "Wasserstofftechnik und Angewandte Chemie: Elektrolyse und Brennstoffzelle, Faraday-Konstante, Brennstoffzellen-BHKW und Wirkungsgrade.",
+      "Biomasse – Energieerzeugung, nachwachsende Rohstoffe: Laborübung mit einer Vergärungsanlage und apparative Bestimmung der Energiegehalte.",
+      "Werkstoffe für Energieerzeugungsanlagen: Leiter, Isolatoren, Magnete, Halbleiter und Konstruktionswerkstoffe. Im Projekt ging es um die Werkstoffauswahl für Anlagen der erneuerbaren Energien.",
+      "Recyclinggerechte Werkstoffwahl und Produktentwicklung: Recyclingverhalten von Kunststoffen."
+    ]
+  },
+  {
+    id: "ee-schwerpunkt",
+    title: "Schwerpunkt Erneuerbare Energien",
+    text: "Sechs Pflichtmodule des Schwerpunkts.",
+    bullets: [
+      "Wind- und Wasserkraftanlagen: Auslegung nach Betz und Schmitz, Ertragsberechnung, Labor mit Pelton-Turbine und Windkanal.",
+      "Solarthermie und Wärmepumpen: Bilanz am Flachkollektor und Wärmepumpenversuch.",
+      "Elektrische Maschinen, Netzeinspeisung und Photovoltaik: Generatoren und Netzeinspeisung, im Labor die Vermessung von Solarzellen und Solarmodulen und die Bilanz eines Wechselrichters.",
+      "Kraftwerkstechnik A und B: Prozesse mit und ohne Phasenwechsel, Dampf- und Gasturbinenprozesse, BHKW.",
+      "Strömungslehre und Strömungsmaschinen"
+    ]
+  },
+  {
+    id: "bachelorarbeit",
+    title: "Bachelorarbeit",
+    text: "Die Bachelorarbeit (Note 1,0) ist bei H2 Power 'n' Heat entstanden. Ihr Titel: Experimentelle und analytische Untersuchung des Feuchtehaushalts in einem Wasserstoffbrennstoffzellensystem. Das Abschlussmodul insgesamt wurde mit 1,1 bewertet."
+  },
+  {
+    id: "grundlagen",
+    title: "Weitere Module: Programmieren, Messtechnik, Konstruktion",
+    bullets: [
+      "Informatik im Maschinenbau: Programmieren, mathematische Bibliotheken, Datenanalyse und Diagramme.",
+      "Industrielle Messtechnik und Statistik",
+      "Steuerungs- und Regelungstechnik sowie Hydraulik und Pneumatik",
+      "CAE-Projekt und Konstruktionsübungen mit SolidWorks"
+    ]
+  }
+];
+
+const STUDIUM_SKILL_BLOCKS = [
+  { skill: "Projektmanagement", block: { ref: "master", sub: "bestanden", text: "Das Master-Projekt Biomasse umfasst die Auslegung einer Biomasseanlage samt Projektmanagement: Projektstrukturplan, Terminplan, Netzplan und Meilensteintrendanalyse." } }
+];
+
+/* Stand von "studium-modules-v1" (wird vom Patch "studium-trim-v1" nur ersetzt, wenn unverändert) */
+const STUDIUM_V1 = {
+  masterBestandenText: "Vier Fachmodule habe ich im Sommersemester 2026 bestanden (20 LP, dazu 5 LP Studium Generale). Der Durchschnitt aller bisher bestandenen Module liegt bei 1,74. Die Inhalte stammen aus dem Modulhandbuch (Stand der Noten: 11/2026).",
+  masterWiseTitle: "Im Wintersemester 2026/27 belegt",
+  pmBlockText: "Das Master-Projekt Biomasse umfasst die Auslegung einer Biomasseanlage samt Projektmanagement: Projektstrukturplan, Terminplan, Netzplan und Meilensteintrendanalyse. Im Wintersemester 2026/27 belege ich dazu Projektmanagement und Personalführung.",
+  pythonBlockText: "Im Bachelor stand das Modul Informatik im Maschinenbau mit Python und Matlab auf dem Plan.",
+  /* Abschnittstexte im Bachelor: alt -> neu (nur bei unverändertem Text) */
+  bachelor: {
+    "ee-wahl": {
+      text: ["Im Wahlbereich habe ich vier Module belegt und bestanden. Die Inhalte stammen aus dem Modulhandbuch.", "Vier Module im Wahlbereich, alle bestanden."],
+      bullets: [["Biomasse – Energieerzeugung, nachwachsende Rohstoffe: Praktikum an einer Vergärungsanlage und Bestimmung des Energiegehalts.", "Biomasse – Energieerzeugung, nachwachsende Rohstoffe: Laborübung mit einer Vergärungsanlage und apparative Bestimmung der Energiegehalte."]]
+    },
+    "ee-schwerpunkt": {
+      text: ["Sechs Pflichtmodule des Schwerpunkts. Die Inhalte stammen aus dem Modulhandbuch.", "Sechs Pflichtmodule des Schwerpunkts."],
+      bullets: [["Elektrische Maschinen, Netzeinspeisung und Photovoltaik: Zell- und Modulmessung, Wechselrichter.", "Elektrische Maschinen, Netzeinspeisung und Photovoltaik: Generatoren und Netzeinspeisung, im Labor die Vermessung von Solarzellen und Solarmodulen und die Bilanz eines Wechselrichters."]]
+    },
+    "bachelorarbeit": {
+      text: ["Die Bachelorarbeit (Note 1,0) behandelt die Simulation von PEM-Brennstoffzellensystemen und ist bei H2 Power 'n' Heat entstanden. Das Abschlussmodul insgesamt wurde mit 1,1 bewertet.", "Die Bachelorarbeit (Note 1,0) ist bei H2 Power 'n' Heat entstanden. Ihr Titel: Experimentelle und analytische Untersuchung des Feuchtehaushalts in einem Wasserstoffbrennstoffzellensystem. Das Abschlussmodul insgesamt wurde mit 1,1 bewertet."]
+    },
+    "grundlagen": {
+      bullets: [["Informatik im Maschinenbau: Programmieren mit Python und Matlab.", "Informatik im Maschinenbau: Programmieren, mathematische Bibliotheken, Datenanalyse und Diagramme."]]
+    }
+  }
+};
+
+/* MATLAB als Kenntnis (Patch "matlab-skill-v1"): belegt durch das Praktikumszeugnis bei Porsche */
+const MATLAB_SKILL_PAGE = {
+  blocks: [
+    { ref: "porsche", text: "Bei Porsche habe ich an einem MATLAB-Skript zur automatisierten Auswertung von Messdaten mitgearbeitet." }
+  ]
+};
 const CONTENT_PATCHES = {
   "h2-sections-v1": (c) => {
     const find = (list) => (list || []).find(e => /H2\s*Power/i.test(e.org || ""));
@@ -863,6 +1092,146 @@ const CONTENT_PATCHES = {
 
     if (!Array.isArray(c.hobbies) || !c.hobbies.length) c.hobbies = [cp(BOXEN_ENTRY)];
     if (!c.skillPages) c.skillPages = cp(DEFAULT_SKILL_PAGES);
+    return true;
+  },
+
+  /* FaSTTUBe ausgebaut: längere Stationsgeschichte, mehr Inhalt in den Abschnitten, neuer Abschnitt
+     "Werkstatt, Kran und Hochvolt". Ersetzt nur Texte, die noch exakt dem alten Standard entsprechen. */
+  "fasttube-expand-v1": (c) => {
+    const cp = (o) => JSON.parse(JSON.stringify(o));
+    const low = (t) => String(t || "").trim().toLowerCase();
+    const ft = (Array.isArray(c.experience) ? c.experience : []).find(x => x && x.id === "fasttube");
+    if (ft) {
+      if (typeof ft.story === "string" && ft.story.trim() === FASTTUBE_V1.story) ft.story = FASTTUBE_STORY_V2;
+      if (!Array.isArray(ft.sections)) ft.sections = [];
+      Object.entries(FASTTUBE_V1.sections).forEach(([id, oldText]) => {
+        const cur = ft.sections.find(s => s && s.id === id);
+        const nw = NEW_FASTTUBE_SECTIONS.find(s => s.id === id);
+        if (cur && nw && cur.text === oldText) cur.text = nw.text;
+      });
+      const wk = NEW_FASTTUBE_SECTIONS.find(s => s.id === "werkstatt");
+      if (!ft.sections.some(s => s && (s.id === "werkstatt" || low(s.title) === low(wk.title)))) {
+        const i = ft.sections.findIndex(s => s && s.id === "fertigung");
+        ft.sections.splice(i >= 0 ? i + 1 : ft.sections.length, 0, cp(wk));
+      }
+    }
+    const sp = c.skillPages;
+    if (sp && typeof sp === "object") {
+      FASTTUBE_V1.skillBlocks.forEach(u => {
+        const page = sp[u.key];
+        if (!page || !Array.isArray(page.blocks)) return;
+        const b = page.blocks.find(x => x && x.ref === u.ref && (x.sub || null) === (u.sub || null) && x.text === u.old);
+        if (!b) return;
+        b.text = u.text;
+        if (u.newSub) b.sub = u.newSub;
+      });
+      FASTTUBE_V1.addBlocks.forEach(a => {
+        const page = sp[a.key];
+        if (!page || !Array.isArray(page.blocks)) return;
+        if (page.blocks.some(x => x && x.ref === a.block.ref && x.sub === a.block.sub)) return;
+        const i = page.blocks.findIndex(x => x && x.ref === a.afterRef && x.sub === a.afterSub);
+        if (i < 0) return;   // Seite wurde umgebaut: nichts erzwingen
+        page.blocks.splice(i + 1, 0, cp(a.block));
+      });
+    }
+    return true;
+  },
+
+  /* Porsche: Tätigkeiten aus dem Praktikumszeugnis. Ersetzt nur die alte Ein-Zeilen-Standardfassung. */
+  "porsche-tasks-v1": (c) => {
+    const list = Array.isArray(c.experience) ? c.experience : [];
+    const por = list.find(x => x && x.id === "porsche") || list.find(x => x && !x.id && /Porsche/i.test(x.org || ""));
+    if (por && Array.isArray(por.bullets) && por.bullets.length === 1 && String(por.bullets[0]).trim() === PORSCHE_BULLET_V1) {
+      por.bullets = PORSCHE_TASKS.slice();
+    }
+    return true;
+  },
+
+  /* ETAS: Aufgaben aus der Tätigkeitsbeschreibung. Ersetzt nur die alte Standardzeile, andere Zeilen bleiben. */
+  "etas-tasks-v1": (c) => {
+    const list = Array.isArray(c.experience) ? c.experience : [];
+    const etas = list.find(x => x && x.id === "etas") || list.find(x => x && !x.id && /ETAS/i.test(x.org || ""));
+    if (etas && Array.isArray(etas.bullets)) {
+      const i = etas.bullets.findIndex(b => String(b).trim() === ETAS_BULLET_V1);
+      if (i >= 0) etas.bullets.splice(i, 1, ...ETAS_TASKS);
+    }
+    return true;
+  },
+
+  /* Studium: Module aus Studiendokumentation und Modulhandbuch als Unterabschnitte. Ergänzt nur, was fehlt. */
+  "studium-modules-v1": (c) => {
+    const edu = Array.isArray(c.education) ? c.education : [];
+    const find = (id, re) => edu.find(x => x && x.id === id) || edu.find(x => x && !x.id && re.test(x.title || ""));
+    const addSections = (e, secs) => {
+      if (!e) return;
+      if (!Array.isArray(e.sections)) e.sections = [];
+      secs.forEach(s => {
+        if (!e.sections.some(x => x && x.id === s.id)) e.sections.push(JSON.parse(JSON.stringify(s)));
+      });
+    };
+    addSections(find("master", /Master/i), STUDIUM_MASTER_SECTIONS);
+    addSections(find("bachelor", /Bachelor/i), STUDIUM_BACHELOR_SECTIONS);
+    const sp = c.skillPages && typeof c.skillPages === "object" ? c.skillPages : null;
+    if (sp) STUDIUM_SKILL_BLOCKS.forEach(({ skill, block }) => {
+      const page = sp[skill];
+      if (!page || page.alias || page.direct) return;
+      if (!Array.isArray(page.blocks)) page.blocks = [];
+      if (!page.blocks.some(b => b && b.ref === block.ref && (b.sub || "") === block.sub)) page.blocks.push(Object.assign({}, block));
+    });
+    return true;
+  },
+
+  /* Studium kürzen: keine belegten (laufenden) Module, keine Verweise auf Dokumente, keine unbelegten Python-/Matlab-Aussagen.
+     Ersetzt nur Texte, die noch den Stand von "studium-modules-v1" haben. */
+  "studium-trim-v1": (c) => {
+    const edu = Array.isArray(c.education) ? c.education : [];
+    const find = (id, re) => edu.find(x => x && x.id === id) || edu.find(x => x && !x.id && re.test(x.title || ""));
+    const master = find("master", /Master/i);
+    const bachelor = find("bachelor", /Bachelor/i);
+    if (master && Array.isArray(master.sections)) {
+      const best = master.sections.find(s => s && s.id === "bestanden");
+      if (best && String(best.text || "").trim() === STUDIUM_V1.masterBestandenText) best.text = STUDIUM_MASTER_SECTIONS[0].text;
+      const i = master.sections.findIndex(s => s && s.id === "wise2627" && String(s.title || "").trim() === STUDIUM_V1.masterWiseTitle);
+      if (i >= 0) master.sections.splice(i, 1);
+    }
+    if (bachelor && Array.isArray(bachelor.sections)) {
+      Object.entries(STUDIUM_V1.bachelor).forEach(([id, rep]) => {
+        const sec = bachelor.sections.find(s => s && s.id === id);
+        if (!sec) return;
+        if (rep.text && String(sec.text || "").trim() === rep.text[0]) sec.text = rep.text[1];
+        (rep.bullets || []).forEach(([from, to]) => {
+          if (!Array.isArray(sec.bullets)) return;
+          const k = sec.bullets.findIndex(b => String(b).trim() === from);
+          if (k >= 0) sec.bullets[k] = to;
+        });
+      });
+    }
+    const sp = c.skillPages && typeof c.skillPages === "object" ? c.skillPages : null;
+    if (sp) {
+      const pm = sp["Projektmanagement"];
+      if (pm && Array.isArray(pm.blocks)) {
+        const b = pm.blocks.find(x => x && x.ref === "master" && x.sub === "bestanden");
+        if (b && String(b.text || "").trim() === STUDIUM_V1.pmBlockText) b.text = STUDIUM_SKILL_BLOCKS[0].block.text;
+      }
+      const py = sp["Python"];
+      if (py && Array.isArray(py.blocks)) {
+        const k = py.blocks.findIndex(x => x && x.ref === "bachelor" && x.sub === "grundlagen" && String(x.text || "").trim() === STUDIUM_V1.pythonBlockText);
+        if (k >= 0) py.blocks.splice(k, 1);
+      }
+    }
+    return true;
+  },
+
+  /* MATLAB als Kenntnis (nach Python), verknüpft mit Porsche. Bestehende Einträge und Seiten bleiben unangetastet. */
+  "matlab-skill-v1": (c) => {
+    const groups = Array.isArray(c.skillGroups) ? c.skillGroups : [];
+    const hard = groups.find(g => g && g.label === "Hardskills");
+    if (hard && Array.isArray(hard.items) && !hard.items.some(x => String(x).trim().toLowerCase() === "matlab")) {
+      const i = hard.items.indexOf("Python");
+      hard.items.splice(i >= 0 ? i + 1 : hard.items.length, 0, "MATLAB");
+    }
+    if (!c.skillPages || typeof c.skillPages !== "object") c.skillPages = {};
+    if (!c.skillPages["MATLAB"]) c.skillPages["MATLAB"] = JSON.parse(JSON.stringify(MATLAB_SKILL_PAGE));
     return true;
   }
 };
@@ -1041,6 +1410,7 @@ function attachLoginHandlers() {
         await saveCompanies(STATE.companies);
       }
       STATE.loginError = "";
+      await loadTailor(code);
       setRoute({ view: "home", code });
     });
   }
@@ -1153,16 +1523,17 @@ function entryTitleHtml(e) {
     : `<div class="l1">${title}, ${tail}</div>`;
 }
 
-function renderEntryRow(key, e, i) {
+function renderEntryRow(key, e, i, rel) {
   const clickable = hasDetail(e);
   const plain = (e.bullets || []).filter(b => !isNote(b));
+  const isRel = !!(rel && e.id && rel.stations.has(e.id));
   const attrs = clickable
-    ? `class="entry clickable" role="button" tabindex="0" data-key="${key}" data-index="${i}" aria-label="${escapeHtml("Mehr zu: " + (e.title || ""))}"`
-    : `class="entry"`;
+    ? `class="entry clickable${isRel ? " rel" : ""}" role="button" tabindex="0" data-key="${key}" data-index="${i}" aria-label="${escapeHtml("Mehr zu: " + (e.title || ""))}"`
+    : `class="entry${isRel ? " rel" : ""}"`;
   return `
     <div ${attrs}>
       <div class="when">${escapeHtml(e.when || "")}</div>
-      <div class="body">${entryTitleHtml(e)}${bulletList(plain)}</div>
+      <div class="body">${isRel ? `<div class="relmark">${TAILOR_REL_TEXT}</div>` : ""}${entryTitleHtml(e)}${bulletList(plain)}</div>
       ${clickable ? `<span class="chev">${ICON_CHEVRON}</span>` : ""}
     </div>`;
 }
@@ -1204,12 +1575,15 @@ function renderHome(code) {
   ].join("");
 
   const anyClickable = sections.some(s => s.list.some(hasDetail));
+  const rel = tailorRel(code);
   const skillRows = (c.skillGroups || [])
     .filter(g => g && (g.items || []).length)
-    .map(g => `<div class="skill"><div class="lab">${escapeHtml(g.label)}</div><div class="val">${g.items.map(it =>
-      skillLinked(it)
-        ? `<button class="skilllink" data-skill="${escapeHtml(it)}">${escapeHtml(it)}</button>`
-        : escapeHtml(it)).join(", ")}</div></div>`)
+    .map(g => `<div class="skill"><div class="lab">${escapeHtml(g.label)}</div><div class="val">${tailorSortSkills(g.items, rel).map(it => {
+      const r = tailorSkillRel(it, rel);
+      return skillLinked(it)
+        ? `<button class="skilllink${r ? " rel-skill" : ""}" data-skill="${escapeHtml(it)}">${escapeHtml(it)}</button>`
+        : (r ? `<span class="rel-skill">${escapeHtml(it)}</span>` : escapeHtml(it));
+    }).join(", ")}</div></div>`)
     .join("");
   const anySkillLink = (c.skillGroups || []).some(g => (g.items || []).some(skillLinked));
 
@@ -1224,11 +1598,13 @@ function renderHome(code) {
       <div class="cv-photo"><img src="${PORTRAIT_SRC}" alt="${escapeHtml(c.name)}"/></div>
     </header>
 
+    ${renderTailorBlock(code, rel)}
+
     ${sections.map((s, n) => `
     <section>
       <div class="sec-head"><span class="bar"></span><h2>${escapeHtml(SECTION_TITLES[s.key])}</h2></div>
       ${n === 0 && anyClickable ? `<div class="hint">Stationen anklicken – dahinter stehen die ausführlichen Geschichten und Fotos.</div>` : ""}
-      ${s.list.map((e, i) => hidden(s.key, i) ? "" : renderEntryRow(s.key, e, i)).join("")}
+      ${s.list.map((e, i) => hidden(s.key, i) ? "" : renderEntryRow(s.key, e, i, rel)).join("")}
     </section>`).join("")}
 
     ${skillRows ? `
@@ -1247,18 +1623,22 @@ function renderHome(code) {
 
 // Besuche pro Station mitschreiben (liest vor dem Schreiben neu, damit zwischenzeitlich
 // angelegte Firmen nicht überschrieben werden)
-async function trackVisit(code, pageKey) {
-  try {
-    const fresh = await loadCompanies();
-    const co = fresh[code];
-    if (!co) return;
-    co.pagesVisited = co.pagesVisited || {};
-    co.pagesVisited[pageKey] = Date.now();
-    await saveCompanies(fresh);
-    STATE.companies = fresh;
-  } catch (err) {
-    console.error("trackVisit", err);
-  }
+let TRACK_CHAIN = Promise.resolve();
+function trackVisit(code, pageKey) {
+  TRACK_CHAIN = TRACK_CHAIN.then(async () => {
+    try {
+      const fresh = await loadCompanies();
+      const co = fresh[code];
+      if (!co) return;
+      co.pagesVisited = co.pagesVisited || {};
+      co.pagesVisited[pageKey] = Date.now();
+      await saveCompanies(fresh);
+      STATE.companies = fresh;
+    } catch (err) {
+      console.error("trackVisit", err);
+    }
+  });
+  return TRACK_CHAIN;
 }
 
 function openEntry(code, key, index, sub) {
@@ -1269,7 +1649,14 @@ function openEntry(code, key, index, sub) {
   setRoute({ view: "detail", code, key, index, sub: sub || undefined, back: back || undefined });
 }
 
-function visitedLabel(k) {
+function visitedLabel(k, code) {
+  const mm = /^match:(\d+)$/.exec(k);
+  if (mm) {
+    const co = code && STATE.companies && STATE.companies[code];
+    const req = co && co.tailored && Array.isArray(co.tailored.reqs) ? co.tailored.reqs[Number(mm[1])] : "";
+    const short = req && req.length > 60 ? req.slice(0, 58) + "…" : req;
+    return "Passung: " + (short || "#" + (Number(mm[1]) + 1));
+  }
   const m = /^(experience|education|projects|hobbies):(\d+)$/.exec(k);
   if (m) {
     const e = ((STATE.content && STATE.content[m[1]]) || [])[Number(m[2])];
@@ -1290,6 +1677,7 @@ function attachHomeHandlers(code) {
   document.querySelectorAll(".skilllink").forEach(el => {
     el.addEventListener("click", () => openSkill(code, el.getAttribute("data-skill")));
   });
+  attachTailorHandlers(code);
   const logout = document.getElementById("logout-link");
   if (logout) {
     logout.addEventListener("click", (e) => {
@@ -1599,6 +1987,578 @@ function attachSkillAdminHandlers() {
 }
 
 /* ============================================================
+   ZUSCHNITT PRO BEWERBUNG
+   Stufe 1: Überschrift "Bewerbung als …", Einleitung, "Passung zur Stelle" (Anforderung, Antwort, Link)
+   Stufe 2: relevante Stationen, Abschnitte und Kenntnisse werden markiert bzw. nach vorn sortiert.
+   Der Zuschnitt liegt je Firma in einem eigenen Dokument (tailor_<code>); die Inhalte selbst bleiben unverändert.
+   Bewerbungspaket: derselbe JSON-Text kann zusätzlich einen Block "company" {name, password?, accent?} enthalten.
+   Im Admin legt "Neue Bewerbung anlegen" daraus Firma, Passwort, Farbe und Zuschnitt in einem Schritt an.
+   ============================================================ */
+const TAILOR_PREFIX = "tailor_";
+const TAILOR_REL_TEXT = "Relevant für diese Stelle";
+const TAILOR_LIMITS = { role: 120, intro: 1000, req: 200, ans: 600, matches: 8, list: 12, name: 80, pw: [6, 40] };
+const TAILOR_NEW = "__new__";     // Auswahl "Neue Bewerbung anlegen" im Admin
+
+/* ---------- Laden / Speichern ---------- */
+async function loadTailor(code) {
+  STATE.tailor = STATE.tailor || {};
+  if (Object.prototype.hasOwnProperty.call(STATE.tailor, code)) return STATE.tailor[code];
+  let t = null;
+  try {
+    const raw = await storageGet(TAILOR_PREFIX + code);
+    if (raw && String(raw).trim()) {
+      const res = validateTailor(JSON.parse(raw), STATE.content, { mode: "load" });
+      t = res.clean || null;      // Verweise, die inzwischen fehlen, werden beim Anzeigen übersprungen
+    }
+  } catch (e) {
+    console.error("loadTailor", e);
+    t = null;
+  }
+  STATE.tailor[code] = t;
+  return t;
+}
+
+async function setCompanyTailored(code, info) {
+  const fresh = await loadCompanies();
+  if (!fresh[code]) return;
+  if (info) fresh[code].tailored = info; else delete fresh[code].tailored;
+  await saveCompanies(fresh);
+  STATE.companies = fresh;
+}
+
+/* ---------- Prüfen ---------- */
+function tcleanStr(v, max, label, errors, required) {
+  if (v == null || v === "") { if (required) errors.push(`${label} fehlt.`); return ""; }
+  if (typeof v !== "string") { errors.push(`${label} muss Text sein.`); return ""; }
+  const s = v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").replace(/\r\n?/g, "\n").trim();
+  if (!s) { if (required) errors.push(`${label} fehlt.`); return ""; }
+  if (s.length > max) errors.push(`${label} ist zu lang (${s.length} Zeichen, höchstens ${max}).`);
+  return s;
+}
+function tailorNormName(s) { return String(s == null ? "" : s).trim().toLowerCase(); }
+
+function tailorStations(c) {
+  const out = [];
+  ID_LISTS.forEach(key => (c[key] || []).forEach((e, i) => {
+    if (e && e.id) out.push({ key, index: i, id: e.id, title: e.title || e.id, entry: e });
+  }));
+  return out;
+}
+function tailorSkillNames(c) {
+  const names = [];
+  (c.skillGroups || []).forEach(g => (g.items || []).forEach(it => { if (!names.includes(it)) names.push(it); }));
+  Object.keys(c.skillPages || {}).forEach(k => { if (!names.includes(k)) names.push(k); });
+  return names;
+}
+function tailorFindSkill(c, name) {
+  const n = tailorNormName(name);
+  return n ? (tailorSkillNames(c).find(x => tailorNormName(x) === n) || "") : "";
+}
+function tailorSubIds(entry) {
+  return (Array.isArray(entry.sections) ? entry.sections : []).filter(s => s && s.id).map(s => s.id);
+}
+
+function tailorCleanLink(l, c, tag, errors, warnings) {
+  if (l == null) return null;
+  if (typeof l !== "object" || Array.isArray(l)) { errors.push(`${tag}: link muss {"station": "…"} oder {"skill": "…"} sein.`); return null; }
+  Object.keys(l).forEach(k => { if (!["station", "sub", "skill"].includes(k)) warnings.push(`${tag}: Unbekanntes Feld "${k}" im Link wird ignoriert.`); });
+  const hasSt = l.station != null && l.station !== "";
+  const hasSk = l.skill != null && l.skill !== "";
+  if (hasSt === hasSk) { errors.push(`${tag}: Der Link braucht genau eines von "station" oder "skill".`); return null; }
+  if (hasSk) {
+    const nm = tailorFindSkill(c, l.skill);
+    if (!nm) {
+      const avail = tailorSkillNames(c).filter(skillLinked).join(", ");
+      errors.push(`${tag}: Kenntnis "${l.skill}" gibt es nicht. Verlinkbar sind: ${avail}.`);
+      return null;
+    }
+    if (!skillLinked(nm)) { errors.push(`${tag}: Die Kenntnis "${nm}" hat keine eigene Seite, auf die verlinkt werden kann.`); return null; }
+    return { skill: nm };
+  }
+  const id = String(l.station).trim();
+  const hit = entryById(c, id);
+  if (!hit) {
+    errors.push(`${tag}: Station "${id}" gibt es nicht. Verfügbar sind: ${tailorStations(c).map(s => s.id).join(", ")}.`);
+    return null;
+  }
+  const out = { station: hit.entry.id };
+  if (l.sub != null && l.sub !== "") {
+    const sub = subById(hit.entry, String(l.sub).trim());
+    if (!sub) {
+      errors.push(`${tag}: Abschnitt "${l.sub}" gibt es bei "${hit.entry.id}" nicht. Verfügbar sind: ${tailorSubIds(hit.entry).join(", ") || "keine Abschnitte"}.`);
+      return null;
+    }
+    out.sub = sub.id;
+  }
+  if (!hasDetail(hit.entry)) warnings.push(`${tag}: Die Station "${hit.entry.title}" hat keine Detailseite.`);
+  return out;
+}
+
+/* Firmenblock des Pakets. Prüft Name, Passwort (Format, nicht vergeben) und Farbe. */
+function tailorCleanCompany(co, errors, warnings) {
+  if (co == null) { errors.push("company fehlt: Für eine neue Bewerbung braucht das Paket den Block company mit dem Firmennamen."); return null; }
+  if (typeof co !== "object" || Array.isArray(co)) { errors.push('company muss ein Objekt sein, zum Beispiel {"name": "Firma AG"}.'); return null; }
+  Object.keys(co).forEach(k => { if (!["name", "password", "accent"].includes(k)) warnings.push(`company: Unbekanntes Feld "${k}" wird ignoriert.`); });
+  const L = TAILOR_LIMITS;
+  const out = { name: tcleanStr(co.name, L.name, "company.name", errors, true), password: "", accent: "" };
+  if (out.name.indexOf("\n") >= 0) { errors.push("company.name darf keinen Zeilenumbruch enthalten."); }
+  if (co.password != null && co.password !== "") {
+    if (typeof co.password !== "string") errors.push("company.password muss Text sein.");
+    else {
+      const pw = co.password.trim();
+      if (/\s/.test(pw)) errors.push("company.password darf keine Leerzeichen enthalten.");
+      else if (pw.length < L.pw[0] || pw.length > L.pw[1]) errors.push(`company.password muss ${L.pw[0]} bis ${L.pw[1]} Zeichen lang sein (hier ${pw.length}).`);
+      else {
+        if (pw !== pw.toLowerCase()) warnings.push("company.password enthält Großbuchstaben. Beim Login zählt die Schreibweise, auf dem Handy wird oft klein geschrieben.");
+        const taken = Object.values(STATE.companies || {}).find(x => x && x.password === pw);
+        if (taken) errors.push(`company.password ist schon an "${taken.name}" vergeben. Bitte ein anderes wählen oder das Feld weglassen (dann erzeuge ich beim Anlegen eines).`);
+        out.password = pw;
+      }
+    }
+  }
+  if (co.accent != null && co.accent !== "") {
+    const h = safeHex(co.accent);
+    if (!h) errors.push('company.accent muss eine Farbe im Format #rrggbb sein, zum Beispiel "#d5001c".');
+    else out.accent = h;
+  }
+  if (out.name) {
+    const same = Object.values(STATE.companies || {}).find(x => x && tailorNormName(x.name) === tailorNormName(out.name));
+    if (same) warnings.push(`Es gibt schon eine Firma "${same.name}". Es wird trotzdem eine neue Bewerbung mit eigenem Passwort angelegt.`);
+  }
+  return out;
+}
+
+/* opts.mode: "existing" (Standard, Zuschnitt für eine vorhandene Firma), "new" (Paket mit company-Block), "load" (stilles Laden) */
+function validateTailor(raw, c, opts) {
+  const mode = (opts && opts.mode) || "existing";
+  const errors = [], warnings = [];
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return { errors: ["Der Zuschnitt muss ein JSON-Objekt sein (beginnt mit { und endet mit })."], warnings, clean: null, company: null, hasTailor: false };
+  }
+  Object.keys(raw).forEach(k => { if (!["v", "role", "intro", "matches", "highlight", "company"].includes(k)) warnings.push(`Unbekanntes Feld "${k}" wird ignoriert.`); });
+  let company = null;
+  if (mode === "new") company = tailorCleanCompany(raw.company, errors, warnings);
+  else if (mode === "existing" && raw.company != null) warnings.push('Der Block company wird ignoriert, weil die Firma schon existiert. Zum Anlegen oben "Neue Bewerbung anlegen" wählen.');
+  const L = TAILOR_LIMITS;
+  const clean = {
+    v: 1,
+    role: tcleanStr(raw.role, L.role, "Stelle (role)", errors, false),
+    intro: tcleanStr(raw.intro, L.intro, "Einleitung (intro)", errors, false),
+    matches: [],
+    highlight: { stations: [], subs: [], skills: [] }
+  };
+
+  let ms = raw.matches == null ? [] : raw.matches;
+  if (!Array.isArray(ms)) { errors.push("matches muss eine Liste sein."); ms = []; }
+  if (ms.length > L.matches) errors.push(`Zu viele Passungen (${ms.length}), höchstens ${L.matches}.`);
+  ms.slice(0, L.matches).forEach((m, i) => {
+    const tag = `Passung ${i + 1}`;
+    if (!m || typeof m !== "object" || Array.isArray(m)) { errors.push(`${tag}: muss ein Objekt mit requirement, answer und link sein.`); return; }
+    Object.keys(m).forEach(k => { if (!["requirement", "answer", "link"].includes(k)) warnings.push(`${tag}: Unbekanntes Feld "${k}" wird ignoriert.`); });
+    const out = {
+      requirement: tcleanStr(m.requirement, L.req, `${tag}: requirement`, errors, true),
+      answer: tcleanStr(m.answer, L.ans, `${tag}: answer`, errors, true)
+    };
+    const link = tailorCleanLink(m.link, c, tag, errors, warnings);
+    if (link) out.link = link;
+    else if (m.link == null) warnings.push(`${tag} hat keinen Link und ist deshalb nicht anklickbar.`);
+    clean.matches.push(out);
+  });
+  if (clean.matches.length && (clean.matches.length < 3 || clean.matches.length > 5)) {
+    warnings.push(`Empfohlen sind 3 bis 5 Passungen, hier sind es ${clean.matches.length}.`);
+  }
+
+  const h = raw.highlight == null ? {} : raw.highlight;
+  if (typeof h !== "object" || Array.isArray(h)) {
+    errors.push("highlight muss ein Objekt mit stations, subs und skills sein.");
+  } else {
+    Object.keys(h).forEach(k => { if (!["stations", "subs", "skills"].includes(k)) warnings.push(`highlight: Unbekanntes Feld "${k}" wird ignoriert.`); });
+    const arr = (k) => {
+      const v = h[k];
+      if (v == null) return [];
+      if (!Array.isArray(v)) { errors.push(`highlight.${k} muss eine Liste sein.`); return []; }
+      if (v.length > L.list) errors.push(`highlight.${k} hat zu viele Einträge (${v.length}, höchstens ${L.list}).`);
+      return v.slice(0, L.list);
+    };
+    arr("stations").forEach(id => {
+      const hit = entryById(c, String(id).trim());
+      if (!hit) errors.push(`highlight.stations: Station "${id}" gibt es nicht. Verfügbar sind: ${tailorStations(c).map(s => s.id).join(", ")}.`);
+      else if (!clean.highlight.stations.includes(hit.entry.id)) clean.highlight.stations.push(hit.entry.id);
+    });
+    arr("subs").forEach(p => {
+      const parts = String(p).split("/").map(x => x.trim());
+      const hit = parts.length === 2 ? entryById(c, parts[0]) : null;
+      const sub = hit ? subById(hit.entry, parts[1]) : null;
+      if (!sub) errors.push(`highlight.subs: "${p}" ist keine gültige Angabe. Format: station/abschnitt, zum Beispiel h2/sim.`);
+      else if (!clean.highlight.subs.includes(hit.entry.id + "/" + sub.id)) clean.highlight.subs.push(hit.entry.id + "/" + sub.id);
+    });
+    arr("skills").forEach(nm => {
+      const f = tailorFindSkill(c, nm);
+      if (!f) errors.push(`highlight.skills: Kenntnis "${nm}" gibt es nicht. Verfügbar sind: ${tailorSkillNames(c).join(", ")}.`);
+      else if (!clean.highlight.skills.includes(f)) clean.highlight.skills.push(f);
+    });
+  }
+  const hasTailor = !!(clean.role || clean.intro || clean.matches.length);
+  if (!hasTailor) {
+    if (mode === "new") warnings.push("Das Paket enthält nur die Firma, aber keinen Zuschnitt. Die Seite bleibt für diese Bewerbung unverändert (nur Farbe).");
+    else warnings.push("Der Zuschnitt enthält weder Stelle, Einleitung noch Passungen und würde nichts anzeigen.");
+  }
+  return { errors, warnings, clean, company, hasTailor };
+}
+
+/* ---------- Relevanz (Stufe 2) ---------- */
+function tailorCanonSkill(name) {
+  const r = resolveSkill(name);
+  return r ? r.key : String(name);
+}
+function tailorRelFrom(t) {
+  const rel = { stations: new Set(), subs: new Set(), skills: new Set(), active: false };
+  if (!t || !STATE.content) return rel;
+  const c = STATE.content;
+  const addSt = (id) => { const hit = entryById(c, id); if (hit) rel.stations.add(hit.entry.id); };
+  const addSub = (id, sub) => {
+    const hit = entryById(c, id);
+    if (!hit) return;
+    rel.stations.add(hit.entry.id);
+    const s = subById(hit.entry, sub);
+    if (s) rel.subs.add(hit.entry.id + "/" + s.id);
+  };
+  (t.matches || []).forEach(m => {
+    const l = m && m.link;
+    if (!l) return;
+    if (l.station) { if (l.sub) addSub(l.station, l.sub); else addSt(l.station); }
+    if (l.skill) rel.skills.add(tailorCanonSkill(l.skill));
+  });
+  const h = t.highlight || {};
+  (h.stations || []).forEach(addSt);
+  (h.subs || []).forEach(p => { const a = String(p).split("/"); addSub(a[0], a[1]); });
+  (h.skills || []).forEach(n => rel.skills.add(tailorCanonSkill(n)));
+  rel.active = rel.stations.size > 0 || rel.skills.size > 0;
+  return rel;
+}
+function tailorRel(code) {
+  return tailorRelFrom(STATE.tailor && STATE.tailor[code]);
+}
+function tailorSkillRel(item, rel) {
+  return !!(rel && rel.skills.size && rel.skills.has(tailorCanonSkill(item)));
+}
+function tailorSortSkills(items, rel) {
+  const list = (items || []).slice();
+  if (!rel || !rel.skills.size) return list;
+  return list.filter(it => tailorSkillRel(it, rel)).concat(list.filter(it => !tailorSkillRel(it, rel)));
+}
+
+/* ---------- Anzeige: Startseite ---------- */
+function tailorTarget(m) {
+  const c = STATE.content;
+  const l = m && m.link;
+  if (!l || !c) return null;
+  if (l.skill) {
+    const r = resolveSkill(l.skill);
+    if (!r || !skillLinked(l.skill)) return null;
+    return { kind: "skill", name: r.key, label: skillTitle(r.key) };
+  }
+  if (l.station) {
+    const hit = entryById(c, l.station);
+    if (!hit) return null;
+    const sub = l.sub ? subById(hit.entry, l.sub) : null;
+    return { kind: "station", key: hit.key, index: hit.index, sub: sub ? sub.id : undefined,
+      label: (hit.entry.title || "Station") + (sub && sub.title ? " › " + sub.title : "") };
+  }
+  return null;
+}
+
+function renderTailorBlock(code, rel) {
+  const t = STATE.tailor && STATE.tailor[code];
+  if (!t) return "";
+  const role = String(t.role || "").trim();
+  const intro = String(t.intro || "").trim();
+  const ms = (t.matches || []).filter(m => m && m.requirement && m.answer);
+  if (!role && !intro && !ms.length) return "";
+  const head = role ? "Bewerbung als " + role : "Passung zur Stelle";
+  const items = ms.map((m, i) => {
+    const tg = tailorTarget(m);
+    return `
+      <div class="match">
+        <div class="match-req">${escapeHtml(m.requirement)}</div>
+        <div class="match-ans">${escapeHtml(m.answer)}</div>
+        ${tg ? `<button class="sk-go match-go" data-match="${i}"><span class="lbl">Mehr dazu: ${escapeHtml(tg.label)}</span>&nbsp;${ICON_ARROW}</button>` : ""}
+      </div>`;
+  }).join("");
+  return `
+    <section class="tailor" id="tailor-block">
+      <div class="sec-head"><span class="bar"></span><h2>${escapeHtml(head)}</h2></div>
+      <div class="tailor-body">
+        ${intro ? `<div class="tailor-intro">${escapeHtml(intro)}</div>` : ""}
+        ${ms.length ? `${role ? `<div class="tailor-sub">Passung zur Stelle</div>` : ""}<div class="matches">${items}</div>` : ""}
+        ${rel && rel.active ? `<div class="tailor-hint">Passende Stationen und Kenntnisse sind unten markiert beziehungsweise fett gesetzt.</div>` : ""}
+      </div>
+    </section>`;
+}
+
+function attachTailorHandlers(code) {
+  document.querySelectorAll(".match-go").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const i = parseInt(btn.getAttribute("data-match"), 10);
+      const t = STATE.tailor && STATE.tailor[code];
+      const ms = t ? (t.matches || []).filter(m => m && m.requirement && m.answer) : [];
+      const tg = ms[i] ? tailorTarget(ms[i]) : null;
+      if (!tg) return;
+      if (!STATE.isAdminAuthed) trackVisit(code, "match:" + i);   // Vorschau aus dem Admin zählt nicht
+      if (tg.kind === "skill") openSkill(code, tg.name);
+      else openEntry(code, tg.key, tg.index, tg.sub);
+    });
+  });
+}
+
+/* ---------- Admin: Zuschnitt einfügen, prüfen, speichern ---------- */
+function tailorPretty(t) { return JSON.stringify(t, null, 2); }
+
+function tailorTemplate(isNew) {
+  const t = {};
+  if (isNew) t.company = { name: "Firmenname", password: genPassword(), accent: "#1f4e8c" };
+  t.role = "Werkstudent Brennstoffzellenentwicklung (m/w/d)";
+  t.intro = "Zwei bis vier Sätze, warum genau diese Stelle.";
+  t.matches = [
+    { requirement: "Anforderung aus der Anzeige", answer: "Kurze Antwort mit Beleg.", link: { station: "h2", sub: "sim" } },
+    { requirement: "Noch eine Anforderung", answer: "Kurze Antwort.", link: { skill: "Python" } }
+  ];
+  t.highlight = { stations: [], subs: [], skills: [] };
+  return tailorPretty(t);
+}
+
+function tailorReference(c) {
+  const rows = tailorStations(c).map(s =>
+    `<tr><td><code>${escapeHtml(s.id)}</code></td><td>${escapeHtml(s.title)}${s.id === "fasttube-projekt" ? " (Duplikat von fasttube, bitte nicht verwenden)" : ""}</td><td>${tailorSubIds(s.entry).map(x => `<code>${escapeHtml(x)}</code>`).join(" ") || "–"}</td></tr>`).join("");
+  const sk = tailorSkillNames(c).filter(skillLinked).map(n => `<code>${escapeHtml(n)}</code>`).join(" ");
+  return `
+    <details class="tailor-ref"><summary>Mögliche Verweise anzeigen</summary>
+      <div class="tbl-scroll"><table class="simple"><thead><tr><th>station</th><th>Titel</th><th>sub (Abschnitte)</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="small-note" style="margin-top:10px"><b>skill</b> (mit eigener Seite): ${sk}</div>
+    </details>`;
+}
+
+function tailorSwatch(hex) {
+  const h = safeHex(hex);
+  return h ? `<span class="swatch" style="background:${h}"></span>` : "";
+}
+
+function tailorReportHtml(res, c) {
+  if (!res) return "";
+  const li = (arr) => `<ul class="cvlist">${arr.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
+  let out = "";
+  if (res.parseError) return `<div class="error-msg">${escapeHtml(res.parseError)}</div>`;
+  if (res.errors.length) out += `<div class="error-msg"><b>Nicht gespeichert, bitte korrigieren:</b>${li(res.errors)}</div>`;
+  if (res.created) {
+    const k = res.created;
+    out += `<div class="tailor-created"><b>Bewerbung angelegt.</b>
+      <div>Firma: ${tailorSwatch(k.accent)}${escapeHtml(k.name)}</div>
+      <div class="pw-line">Passwort: <code class="pw-big" id="tailor-created-pw">${escapeHtml(k.password)}</code>
+        <button class="icon-btn" data-action="tailor-copy-pw" data-pw="${escapeHtml(k.password)}">Passwort kopieren</button></div>
+      <div class="small-note" style="margin:6px 0 0">Das Passwort steht auch in der Tabelle oben. Mit "Vorschau" siehst du die Seite so, wie die Firma sie sieht.</div>
+    </div>`;
+  }
+  if (res.warnings.length) out += `<div class="tailor-warn"><b>Hinweise</b>${li(res.warnings)}</div>`;
+  if (!res.errors.length && res.clean && !(res.company && !res.hasTailor)) {
+    const rel = tailorRelFrom(res.clean);
+    const st = tailorStations(c);
+    const stNames = [...rel.stations].map(id => (st.find(s => s.id === id) || {}).title || id);
+    const subNames = [...rel.subs].map(p => {
+      const a = p.split("/"); const hit = entryById(c, a[0]); const s = hit ? subById(hit.entry, a[1]) : null;
+      return (hit ? hit.entry.title : a[0]) + " / " + (s ? s.title : a[1]);
+    });
+    const links = res.clean.matches.map((m, i) => {
+      const tg = tailorTarget(m);
+      return `${i + 1}. ${m.requirement} › ${tg ? tg.label : "ohne Link"}`;
+    });
+    out += `<div class="tailor-ok"><b>Gültig${res.saved ? " und gespeichert" : ""}.</b>
+      ${res.company && !res.created ? `<div>Neue Firma: ${tailorSwatch(res.company.accent)}${escapeHtml(res.company.name)}${res.company.accent ? "" : " (Standardfarben)"}</div>
+      <div>Passwort: ${res.company.password ? `<code>${escapeHtml(res.company.password)}</code>` : "wird beim Anlegen erzeugt"}</div>` : ""}
+      ${res.clean.role ? `<div>Stelle: ${escapeHtml(res.clean.role)}</div>` : ""}
+      ${links.length ? `<div>Passungen:</div>${li(links)}` : ""}
+      <div>Markierte Stationen: ${escapeHtml(stNames.join(", ") || "keine")}</div>
+      <div>Vorgezogene Abschnitte: ${escapeHtml(subNames.join(", ") || "keine")}</div>
+      <div>Hervorgehobene Kenntnisse: ${escapeHtml([...rel.skills].join(", ") || "keine")}</div>
+    </div>`;
+  } else if (!res.errors.length && res.company && !res.created) {
+    out += `<div class="tailor-ok"><b>Gültig.</b>
+      <div>Neue Firma: ${tailorSwatch(res.company.accent)}${escapeHtml(res.company.name)}${res.company.accent ? "" : " (Standardfarben)"}</div>
+      <div>Passwort: ${res.company.password ? `<code>${escapeHtml(res.company.password)}</code>` : "wird beim Anlegen erzeugt"}</div>
+    </div>`;
+  }
+  return out;
+}
+
+function renderTailorPanel() {
+  const companies = STATE.companies || {};
+  const entries = Object.entries(companies).sort((a, b) => b[1].createdAt - a[1].createdAt);
+  const isNew = STATE.tailorSel === TAILOR_NEW;
+  const sel = isNew ? TAILOR_NEW : (STATE.tailorSel && companies[STATE.tailorSel] ? STATE.tailorSel : "");
+  const draft = sel && STATE.tailorDraft && STATE.tailorDraft[sel] != null ? STATE.tailorDraft[sel] : "";
+  const rep = STATE.tailorReport && STATE.tailorReport.code === sel ? tailorReportHtml(STATE.tailorReport.res, STATE.content) : "";
+  const dis = sel ? "" : " disabled";
+  const disEx = sel && !isNew ? "" : " disabled";
+  return `
+    <div class="panel" id="tailor-panel">
+      <h2>Zuschnitt pro Bewerbung</h2>
+      <div class="small-note" style="margin:0 0 12px">Ablauf: Du schickst mir Firma und Stellenbeschreibung, ich antworte mit einem Bewerbungspaket (Firma, Passwort, Farbe, Stelle, Passungen) als JSON. Hier unter "Neue Bewerbung anlegen" einfügen, prüfen und anlegen; danach steht das Passwort bereit. Für eine vorhandene Firma geht dasselbe ohne den Block company. Die Seite selbst muss dafür nicht neu hochgeladen werden.</div>
+      <div class="inline-form">
+        <select id="tailor-company" aria-label="Firma wählen">
+          <option value="">Firma wählen …</option>
+          <option value="${TAILOR_NEW}"${isNew ? " selected" : ""}>+ Neue Bewerbung anlegen (Paket einfügen) …</option>
+          ${entries.map(([code, co]) => `<option value="${escapeHtml(code)}"${code === sel ? " selected" : ""}>${escapeHtml(co.name)}${co.tailored ? " (Zuschnitt vorhanden)" : ""}</option>`).join("")}
+        </select>
+      </div>
+      <textarea id="tailor-json" class="editor tailor-json" spellcheck="false" placeholder="${isNew ? "Bewerbungspaket (JSON) hier einfügen" : "JSON hier einfügen"}"${dis}>${escapeHtml(draft)}</textarea>
+      <div class="inline-form" style="margin-top:10px">
+        <button class="btn ghost" id="tailor-template"${dis}>Vorlage einsetzen</button>
+        <button class="btn ghost" id="tailor-check"${dis}>Prüfen</button>
+        <button class="btn" id="tailor-save"${dis}>${isNew ? "Anlegen" : "Speichern"}</button>
+        <button class="btn ghost" id="tailor-preview"${disEx}>Vorschau</button>
+        <button class="icon-btn danger" id="tailor-remove"${disEx}>Zuschnitt entfernen</button>
+      </div>
+      <div class="tailor-report" id="tailor-report">${rep}</div>
+      ${tailorReference(STATE.content)}
+    </div>`;
+}
+
+function tailorParse(text) {
+  let t = String(text || "").trim();
+  t = t.replace(/^```[a-z]*\s*/i, "").replace(/\s*```$/, "").trim();      // Codeblock aus dem Chat mitkopiert
+  if (!t) return { parseError: "Das Feld ist leer." };
+  try { return { value: JSON.parse(t) }; }
+  catch (e) { return { parseError: "Das ist kein gültiges JSON: " + e.message }; }
+}
+
+function tailorRunCheck(code) {
+  const p = tailorParse(STATE.tailorDraft[code]);
+  if (p.parseError) return { parseError: p.parseError, errors: [p.parseError], warnings: [], clean: null, company: null, hasTailor: false };
+  return validateTailor(p.value, STATE.content, { mode: code === TAILOR_NEW ? "new" : "existing" });
+}
+
+async function tailorSelect(code) {
+  STATE.tailorSel = code || "";
+  STATE.tailorDraft = STATE.tailorDraft || {};
+  STATE.tailorReport = null;
+  if (code && code !== TAILOR_NEW) {
+    const t = await loadTailor(code);
+    if (STATE.tailorDraft[code] == null) STATE.tailorDraft[code] = t ? tailorPretty(t) : "";
+  }
+  render();
+  if (code) { const el = document.getElementById("tailor-panel"); if (el && el.scrollIntoView) el.scrollIntoView({ block: "start" }); }
+}
+
+/* Neue Bewerbung aus dem Paket: Zuschnitt, Firma, Passwort und Farbe in einem Schritt.
+   Die Firmenliste wird dafür frisch geladen, damit kein Passwort doppelt vergeben wird. */
+async function tailorCreate() {
+  if (STATE.tailorBusy) return;
+  STATE.tailorBusy = true;
+  try {
+    const res = tailorRunCheck(TAILOR_NEW);
+    const fail = (msg) => { STATE.tailorReport = { code: TAILOR_NEW, res: { errors: [msg], warnings: [], clean: null, company: null, hasTailor: false } }; render(); };
+    if (res.errors.length || !res.clean || !res.company) { STATE.tailorReport = { code: TAILOR_NEW, res }; render(); return; }
+    const fresh = await loadCompanies();
+    const used = new Set(Object.values(fresh).map(x => x && x.password));
+    let password = res.company.password;
+    if (password && used.has(password)) { fail("company.password ist inzwischen vergeben. Bitte ein anderes wählen oder das Feld weglassen."); return; }
+    if (!password) { do { password = genPassword(); } while (used.has(password)); }
+    let code;
+    do { code = genCode(8); } while (fresh[code]);
+    const entry = { name: res.company.name, password, createdAt: Date.now(), opened: false, openedAt: null, pagesVisited: {} };
+    if (res.company.accent) entry.accent = res.company.accent;
+    if (res.hasTailor) {
+      const okT = await storageSet(TAILOR_PREFIX + code, JSON.stringify(res.clean));
+      if (!okT) { fail("Speichern hat nicht geklappt. Es wurde nichts angelegt. Bitte erneut versuchen."); return; }
+      entry.tailored = { role: res.clean.role, reqs: res.clean.matches.map(m => m.requirement), at: Date.now() };
+    }
+    fresh[code] = entry;
+    const okC = await saveCompanies(fresh);
+    if (!okC) {
+      if (res.hasTailor) await storageSet(TAILOR_PREFIX + code, "");
+      fail("Speichern hat nicht geklappt. Es wurde nichts angelegt. Bitte erneut versuchen.");
+      return;
+    }
+    STATE.companies = fresh;
+    STATE.tailor = STATE.tailor || {};
+    STATE.tailor[code] = res.hasTailor ? res.clean : null;
+    STATE.tailorDraft[code] = res.hasTailor ? tailorPretty(res.clean) : "";
+    STATE.tailorDraft[TAILOR_NEW] = "";
+    STATE.tailorSel = code;
+    STATE.tailorReport = { code, res: Object.assign({}, res, { saved: res.hasTailor, created: { code, name: entry.name, password, accent: entry.accent || "" } }) };
+    showToast(`Passwort für ${entry.name} erstellt: ${password}`);
+  } finally {
+    STATE.tailorBusy = false;
+  }
+}
+
+function attachTailorAdminHandlers() {
+  STATE.tailorDraft = STATE.tailorDraft || {};
+  STATE.tailor = STATE.tailor || {};
+  const sel = document.getElementById("tailor-company");
+  if (sel) sel.addEventListener("change", () => tailorSelect(sel.value));
+  const ta = document.getElementById("tailor-json");
+  if (ta) ta.addEventListener("input", () => { if (STATE.tailorSel) STATE.tailorDraft[STATE.tailorSel] = ta.value; });
+  const code = () => STATE.tailorSel;
+
+  const tpl = document.getElementById("tailor-template");
+  if (tpl) tpl.addEventListener("click", () => {
+    if (!code()) return;
+    STATE.tailorDraft[code()] = tailorTemplate(code() === TAILOR_NEW);
+    STATE.tailorReport = null;
+    render();
+  });
+  const chk = document.getElementById("tailor-check");
+  if (chk) chk.addEventListener("click", () => {
+    if (!code()) return;
+    STATE.tailorReport = { code: code(), res: tailorRunCheck(code()) };
+    render();
+  });
+  const save = document.getElementById("tailor-save");
+  if (save) save.addEventListener("click", async () => {
+    const cd = code();
+    if (!cd) return;
+    if (cd === TAILOR_NEW) { await tailorCreate(); return; }
+    const res = tailorRunCheck(cd);
+    if (res.errors.length || !res.clean) { STATE.tailorReport = { code: cd, res }; render(); return; }
+    const ok = await storageSet(TAILOR_PREFIX + cd, JSON.stringify(res.clean));
+    if (!ok) { STATE.tailorReport = { code: cd, res: { errors: ["Speichern hat nicht geklappt. Bitte erneut versuchen."], warnings: [], clean: null } }; render(); return; }
+    STATE.tailor[cd] = res.clean;
+    STATE.tailorDraft[cd] = tailorPretty(res.clean);
+    await setCompanyTailored(cd, { role: res.clean.role, reqs: res.clean.matches.map(m => m.requirement), at: Date.now() });
+    STATE.tailorReport = { code: cd, res: Object.assign({}, res, { saved: true }) };
+    showToast("Zuschnitt gespeichert.");
+  });
+  const prev = document.getElementById("tailor-preview");
+  if (prev) prev.addEventListener("click", async () => {
+    const cd = code();
+    if (!cd || cd === TAILOR_NEW) return;
+    await loadTailor(cd);
+    setRoute({ view: "home", code: cd });
+  });
+  const rm = document.getElementById("tailor-remove");
+  if (rm) rm.addEventListener("click", async () => {
+    const cd = code();
+    if (!cd || cd === TAILOR_NEW) return;
+    if (!confirm(`Zuschnitt für "${STATE.companies[cd].name}" wirklich entfernen?`)) return;
+    await storageSet(TAILOR_PREFIX + cd, "");
+    STATE.tailor[cd] = null;
+    STATE.tailorDraft[cd] = "";
+    STATE.tailorReport = null;
+    await setCompanyTailored(cd, null);
+    showToast("Zuschnitt entfernt.");
+  });
+  document.querySelectorAll('[data-action="tailor-open"]').forEach(btn => {
+    btn.addEventListener("click", () => tailorSelect(btn.getAttribute("data-code")));
+  });
+  document.querySelectorAll('[data-action="tailor-copy-pw"]').forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pw = btn.getAttribute("data-pw") || "";
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(pw).then(() => showToast("Passwort kopiert."), () => showToast(pw));
+      else showToast(pw);
+    });
+  });
+}
+/* ============================================================
    RENDER: DETAIL PAGES
    ============================================================ */
 const PAGE_TITLES = {
@@ -1745,13 +2705,13 @@ function renderPhotoGallery(photos) {
   return `<div class="gallery ${cls}">${slots}</div>`;
 }
 
-function renderSubsection(s, entry) {
+function renderSubsection(s, entry, isRel) {
   const text = s.text ? `<div class="detail-sub-text">${escapeHtml(s.text)}</div>` : "";
   const bullets = s.bullets && s.bullets.length ? bulletList(s.bullets) : "";
   const chips = s.id ? skillChips(entry, s.id) : "";
   return `
-    <details class="subsection" open${s.id ? ` id="sub-${escapeHtml(s.id)}"` : ""}>
-      <summary>${escapeHtml(s.title || "")}</summary>
+    <details class="subsection${isRel ? " rel" : ""}" open${s.id ? ` id="sub-${escapeHtml(s.id)}"` : ""}>
+      <summary>${escapeHtml(s.title || "")}${isRel ? `<span class="relmark inline">${TAILOR_REL_TEXT}</span>` : ""}</summary>
       <div class="subsection-body">${text}${bullets}${chips}</div>
     </details>`;
 }
@@ -1766,8 +2726,12 @@ function renderDetail(code, key, index) {
   const plain = (e.bullets || []).filter(b => !isNote(b));
   const orgLine = [orgHtml(e.org)].concat(notes.map(escapeHtml)).filter(Boolean).join(", ");
   const story = e.story && String(e.story).trim() ? `<div class="detail-story">${escapeHtml(e.story)}</div>` : "";
-  const subs = Array.isArray(e.sections) ? e.sections.filter(s => s && (s.title || s.text || (s.bullets && s.bullets.length))) : [];
-  const sections = subs.length ? `<div class="subsections">${subs.map(s => renderSubsection(s, e)).join("")}</div>` : "";
+  const rel = tailorRel(code);
+  const subsAll = Array.isArray(e.sections) ? e.sections.filter(s => s && (s.title || s.text || (s.bullets && s.bullets.length))) : [];
+  const subIsRel = (s) => !!(rel && e.id && s.id && rel.subs.has(e.id + "/" + s.id));
+  const subs = subsAll.filter(subIsRel).concat(subsAll.filter(s => !subIsRel(s)));   // relevante Abschnitte zuerst, Rest in alter Reihenfolge
+  const sections = subs.length ? `<div class="subsections">${subs.map(s => renderSubsection(s, e, subIsRel(s))).join("")}</div>` : "";
+  const stationRel = !!(rel && e.id && rel.stations.has(e.id));
   const stationChips = skillChips(e, "");
   const backLabel = STATE.route.back || "Zurück zum Lebenslauf";
 
@@ -1803,6 +2767,7 @@ function renderDetail(code, key, index) {
       <div class="main">
         <h1 class="d-title">${escapeHtml(e.title || "")}</h1>
         ${orgLine ? `<div class="d-org">${orgLine}</div>` : ""}
+        ${stationRel ? `<div class="relmark">${TAILOR_REL_TEXT}</div>` : ""}
         ${bulletList(plain)}
         ${renderPhotoGallery(allPhotos)}
         ${story}
@@ -1893,14 +2858,15 @@ function renderAdmin() {
       const visited = c.pagesVisited ? Object.entries(c.pagesVisited).sort((a, b) => (a[1] || 0) - (b[1] || 0)).map(x => x[0]) : [];
       return `
       <tr>
-        <td>${safeHex(c.accent) ? `<span class="swatch" style="background:${safeHex(c.accent)}"></span>` : ""}<b>${escapeHtml(c.name)}</b></td>
+        <td>${safeHex(c.accent) ? `<span class="swatch" style="background:${safeHex(c.accent)}"></span>` : ""}<b>${escapeHtml(c.name)}</b>${c.tailored ? `<div class="tailor-pill">Zuschnitt: ${escapeHtml(c.tailored.role || "ohne Stellenbezeichnung")}</div>` : ""}</td>
         <td><code>${escapeHtml(c.password)}</code></td>
         <td>${c.opened ? `<span class="pill opened">Geöffnet ${fmtDate(c.openedAt)}</span>` : `<span class="pill pending">Noch nicht geöffnet</span>`}</td>
-        <td>${visited.length ? visited.map(p => escapeHtml(visitedLabel(p))).join(", ") : "–"}</td>
+        <td>${visited.length ? visited.map(p => escapeHtml(visitedLabel(p, code))).join(", ") : "–"}</td>
         <td><div class="color-cell"><input type="color" data-action="company-color" data-code="${escapeHtml(code)}" value="${safeHex(c.accent) || "#111111"}" title="Firmenfarbe wählen"/>${safeHex(c.accent) ? `<button class="icon-btn" data-action="company-color-reset" data-code="${escapeHtml(code)}">Standard</button>` : `<span class="small-note" style="margin:0">Standard</span>`}</div></td>
         <td>
           <div class="row-actions">
             <button class="icon-btn" data-action="preview" data-code="${escapeHtml(code)}">Vorschau</button>
+            <button class="icon-btn" data-action="tailor-open" data-code="${escapeHtml(code)}">Zuschnitt</button>
             <button class="icon-btn" data-action="copy" data-code="${escapeHtml(code)}">Link kopieren</button>
             <button class="icon-btn danger" data-action="delete" data-code="${escapeHtml(code)}">Löschen</button>
           </div>
@@ -1924,7 +2890,7 @@ function renderAdmin() {
         <label class="color-pick" title="Firmenfarbe (optional)"><input type="checkbox" id="new-company-usecolor"> Firmenfarbe <input type="color" id="new-company-color" value="#d5001c"></label>
         <button class="btn" id="create-company-btn">Passwort generieren</button>
       </div>
-      <div class="small-note">Es wird automatisch ein eindeutiges Passwort erzeugt, das du an die Firma weitergeben kannst. Mit Firmenfarbe färbt sich die Seite (Balken, Aufzählungen, Hover) in dieser Farbe ein.</div>
+      <div class="small-note">Es wird automatisch ein eindeutiges Passwort erzeugt, das du an die Firma weitergeben kannst. Mit Firmenfarbe färbt sich die Seite (Balken, Aufzählungen, Hover) in dieser Farbe ein. Für eine Bewerbung mit Zuschnitt auf die Stelle: weiter unten bei "Zuschnitt pro Bewerbung" die Option "Neue Bewerbung anlegen" nutzen.</div>
     </div>
 
     <div class="panel">
@@ -1936,6 +2902,7 @@ function renderAdmin() {
         </table>` : `<div class="empty-note">Noch keine Bewerbungen angelegt.</div>`}
     </div>
 
+    ${renderTailorPanel()}
     <div class="panel">
       <h2>Profil &amp; Kontakt</h2>
       <div class="editor-field"><label>Name</label><input data-field="name" value="${escapeHtml(c.name)}"/></div>
@@ -2053,6 +3020,7 @@ function renderSkillsEditor(skillGroups) {
 
 function attachAdminHandlers() {
   attachSkillAdminHandlers();
+  attachTailorAdminHandlers();
   const _uc = document.getElementById("new-company-usecolor");
   const _cc = document.getElementById("new-company-color");
   if (_uc && _cc) _cc.addEventListener("input", () => { _uc.checked = true; });
@@ -2070,7 +3038,11 @@ function attachAdminHandlers() {
     });
   });
   document.querySelectorAll('[data-action="preview"]').forEach(btn => {
-    btn.addEventListener("click", () => setRoute({ view: "home", code: btn.getAttribute("data-code") }));
+    btn.addEventListener("click", async () => {
+      const cd = btn.getAttribute("data-code");
+      await loadTailor(cd);
+      setRoute({ view: "home", code: cd });
+    });
   });
 
   const logout = document.getElementById("admin-logout");
@@ -2114,6 +3086,7 @@ function attachAdminHandlers() {
       if (!confirm(`Eintrag für "${STATE.companies[code].name}" wirklich löschen?`)) return;
       delete STATE.companies[code];
       await saveCompanies(STATE.companies);
+      try { await storageSet(TAILOR_PREFIX + code, ""); if (STATE.tailor) delete STATE.tailor[code]; } catch (e) {}
       render();
     });
   });
