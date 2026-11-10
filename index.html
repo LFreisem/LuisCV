@@ -72,8 +72,8 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
   align-items: center;
   margin: 30px 0 8px;
 }
-.sec-head .bar { display: block; height: 9px; background: var(--bar); }
-html.themed body::before { content: ""; display: block; height: 6px; background: var(--bar); }
+.sec-head .bar { display: block; height: 9px; background: var(--bar-bg, var(--bar)); }
+html.themed body::before { content: ""; display: block; height: 6px; background: var(--bar-bg, var(--bar)); }
 .sec-head h2 { font-size: 23px; line-height: 1.2; }
 
 .hint {
@@ -1435,12 +1435,19 @@ function relLum(rgb) {
   const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
   return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
 }
-function applyTheme(hex) {
+/* Hintergrund für Swatches: einfarbig oder Verlauf (Akzent -> zweite Farbe) */
+function swatchBg(a, b) {
+  const h = safeHex(a), h2 = safeHex(b);
+  if (!h) return "";
+  return h2 ? `linear-gradient(90deg, ${h}, ${h2})` : h;
+}
+/* hex2 (optional): zweite Farbe, erzeugt einen Verlauf in den Balken (wie im Logo der Firma) */
+function applyTheme(hex, hex2) {
   const root = document.documentElement;
   let meta = document.querySelector('meta[name="theme-color"]');
   const h = safeHex(hex);
   if (!h) {
-    ["--bar", "--ring", "--hover", "--flash"].forEach(p => root.style.removeProperty(p));
+    ["--bar", "--bar-bg", "--ring", "--hover", "--flash"].forEach(p => root.style.removeProperty(p));
     root.classList.remove("themed");
     if (meta) meta.remove();
     return;
@@ -1451,6 +1458,14 @@ function applyTheme(hex) {
   const ink = L > 0.45 ? rgb.map(v => Math.round(v * 0.6)) : rgb;
   const bar = L > 0.8 ? ink : rgb;
   root.style.setProperty("--bar", `rgb(${bar.join(",")})`);
+  const h2 = safeHex(hex2);
+  if (h2) {
+    const rgb2 = hexToRgb(h2);
+    const bar2 = relLum(rgb2) > 0.8 ? rgb2.map(v => Math.round(v * 0.6)) : rgb2;
+    root.style.setProperty("--bar-bg", `linear-gradient(90deg, rgb(${bar.join(",")}), rgb(${bar2.join(",")}))`);
+  } else {
+    root.style.removeProperty("--bar-bg");
+  }
   root.style.setProperty("--ring", `rgb(${ink.join(",")})`);
   root.style.setProperty("--hover", `rgba(${rgb.join(",")},0.08)`);
   root.style.setProperty("--flash", `rgba(${ink.join(",")},0.22)`);
@@ -1463,7 +1478,7 @@ async function updateCompanyAccent(code, hex) {
   const fresh = await loadCompanies();
   if (!fresh[code]) return;
   const h = safeHex(hex);
-  if (h) fresh[code].accent = h; else delete fresh[code].accent;
+  if (h) fresh[code].accent = h; else { delete fresh[code].accent; delete fresh[code].accent2; }
   await saveCompanies(fresh);
   STATE.companies = fresh;
 }
@@ -2098,9 +2113,9 @@ function tailorCleanLink(l, c, tag, errors, warnings) {
 function tailorCleanCompany(co, errors, warnings) {
   if (co == null) { errors.push("company fehlt: Für eine neue Bewerbung braucht das Paket den Block company mit dem Firmennamen."); return null; }
   if (typeof co !== "object" || Array.isArray(co)) { errors.push('company muss ein Objekt sein, zum Beispiel {"name": "Firma AG"}.'); return null; }
-  Object.keys(co).forEach(k => { if (!["name", "password", "accent"].includes(k)) warnings.push(`company: Unbekanntes Feld "${k}" wird ignoriert.`); });
+  Object.keys(co).forEach(k => { if (!["name", "password", "accent", "accent2"].includes(k)) warnings.push(`company: Unbekanntes Feld "${k}" wird ignoriert.`); });
   const L = TAILOR_LIMITS;
-  const out = { name: tcleanStr(co.name, L.name, "company.name", errors, true), password: "", accent: "" };
+  const out = { name: tcleanStr(co.name, L.name, "company.name", errors, true), password: "", accent: "", accent2: "" };
   if (out.name.indexOf("\n") >= 0) { errors.push("company.name darf keinen Zeilenumbruch enthalten."); }
   if (co.password != null && co.password !== "") {
     if (typeof co.password !== "string") errors.push("company.password muss Text sein.");
@@ -2120,6 +2135,13 @@ function tailorCleanCompany(co, errors, warnings) {
     const h = safeHex(co.accent);
     if (!h) errors.push('company.accent muss eine Farbe im Format #rrggbb sein, zum Beispiel "#d5001c".');
     else out.accent = h;
+  }
+  if (co.accent2 != null && co.accent2 !== "") {
+    const h2 = safeHex(co.accent2);
+    if (!h2) errors.push('company.accent2 muss eine Farbe im Format #rrggbb sein, zum Beispiel "#ec6500".');
+    else if (!out.accent) warnings.push("company.accent2 braucht eine Hauptfarbe (company.accent) und wird sonst ignoriert.");
+    else if (h2 === out.accent) warnings.push("company.accent2 ist dieselbe Farbe wie accent, es gibt keinen Verlauf.");
+    else out.accent2 = h2;
   }
   if (out.name) {
     const same = Object.values(STATE.companies || {}).find(x => x && tailorNormName(x.name) === tailorNormName(out.name));
@@ -2338,9 +2360,9 @@ function tailorReference(c) {
     </details>`;
 }
 
-function tailorSwatch(hex) {
-  const h = safeHex(hex);
-  return h ? `<span class="swatch" style="background:${h}"></span>` : "";
+function tailorSwatch(hex, hex2) {
+  const bg = swatchBg(hex, hex2);
+  return bg ? `<span class="swatch" style="background:${bg}"></span>` : "";
 }
 
 function tailorReportHtml(res, c) {
@@ -2352,7 +2374,7 @@ function tailorReportHtml(res, c) {
   if (res.created) {
     const k = res.created;
     out += `<div class="tailor-created"><b>Bewerbung angelegt.</b>
-      <div>Firma: ${tailorSwatch(k.accent)}${escapeHtml(k.name)}</div>
+      <div>Firma: ${tailorSwatch(k.accent, k.accent2)}${escapeHtml(k.name)}${k.accent2 ? " (Farbverlauf)" : ""}</div>
       <div class="pw-line">Passwort: <code class="pw-big" id="tailor-created-pw">${escapeHtml(k.password)}</code>
         <button class="icon-btn" data-action="tailor-copy-pw" data-pw="${escapeHtml(k.password)}">Passwort kopieren</button></div>
       <div class="small-note" style="margin:6px 0 0">Das Passwort steht auch in der Tabelle oben. Mit "Vorschau" siehst du die Seite so, wie die Firma sie sieht.</div>
@@ -2372,7 +2394,7 @@ function tailorReportHtml(res, c) {
       return `${i + 1}. ${m.requirement} › ${tg ? tg.label : "ohne Link"}`;
     });
     out += `<div class="tailor-ok"><b>Gültig${res.saved ? " und gespeichert" : ""}.</b>
-      ${res.company && !res.created ? `<div>Neue Firma: ${tailorSwatch(res.company.accent)}${escapeHtml(res.company.name)}${res.company.accent ? "" : " (Standardfarben)"}</div>
+      ${res.company && !res.created ? `<div>Neue Firma: ${tailorSwatch(res.company.accent, res.company.accent2)}${escapeHtml(res.company.name)}${res.company.accent ? (res.company.accent2 ? " (Farbverlauf)" : "") : " (Standardfarben)"}</div>
       <div>Passwort: ${res.company.password ? `<code>${escapeHtml(res.company.password)}</code>` : "wird beim Anlegen erzeugt"}</div>` : ""}
       ${res.clean.role ? `<div>Stelle: ${escapeHtml(res.clean.role)}</div>` : ""}
       ${links.length ? `<div>Passungen:</div>${li(links)}` : ""}
@@ -2382,7 +2404,7 @@ function tailorReportHtml(res, c) {
     </div>`;
   } else if (!res.errors.length && res.company && !res.created) {
     out += `<div class="tailor-ok"><b>Gültig.</b>
-      <div>Neue Firma: ${tailorSwatch(res.company.accent)}${escapeHtml(res.company.name)}${res.company.accent ? "" : " (Standardfarben)"}</div>
+      <div>Neue Firma: ${tailorSwatch(res.company.accent, res.company.accent2)}${escapeHtml(res.company.name)}${res.company.accent ? (res.company.accent2 ? " (Farbverlauf)" : "") : " (Standardfarben)"}</div>
       <div>Passwort: ${res.company.password ? `<code>${escapeHtml(res.company.password)}</code>` : "wird beim Anlegen erzeugt"}</div>
     </div>`;
   }
@@ -2466,6 +2488,7 @@ async function tailorCreate() {
     do { code = genCode(8); } while (fresh[code]);
     const entry = { name: res.company.name, password, createdAt: Date.now(), opened: false, openedAt: null, pagesVisited: {} };
     if (res.company.accent) entry.accent = res.company.accent;
+    if (res.company.accent2) entry.accent2 = res.company.accent2;
     if (res.hasTailor) {
       const okT = await storageSet(TAILOR_PREFIX + code, JSON.stringify(res.clean));
       if (!okT) { fail("Speichern hat nicht geklappt. Es wurde nichts angelegt. Bitte erneut versuchen."); return; }
@@ -2484,7 +2507,7 @@ async function tailorCreate() {
     STATE.tailorDraft[code] = res.hasTailor ? tailorPretty(res.clean) : "";
     STATE.tailorDraft[TAILOR_NEW] = "";
     STATE.tailorSel = code;
-    STATE.tailorReport = { code, res: Object.assign({}, res, { saved: res.hasTailor, created: { code, name: entry.name, password, accent: entry.accent || "" } }) };
+    STATE.tailorReport = { code, res: Object.assign({}, res, { saved: res.hasTailor, created: { code, name: entry.name, password, accent: entry.accent || "", accent2: entry.accent2 || "" } }) };
     showToast(`Passwort für ${entry.name} erstellt: ${password}`);
   } finally {
     STATE.tailorBusy = false;
@@ -2858,7 +2881,7 @@ function renderAdmin() {
       const visited = c.pagesVisited ? Object.entries(c.pagesVisited).sort((a, b) => (a[1] || 0) - (b[1] || 0)).map(x => x[0]) : [];
       return `
       <tr>
-        <td>${safeHex(c.accent) ? `<span class="swatch" style="background:${safeHex(c.accent)}"></span>` : ""}<b>${escapeHtml(c.name)}</b>${c.tailored ? `<div class="tailor-pill">Zuschnitt: ${escapeHtml(c.tailored.role || "ohne Stellenbezeichnung")}</div>` : ""}</td>
+        <td>${safeHex(c.accent) ? `<span class="swatch" style="background:${swatchBg(c.accent, c.accent2)}"></span>` : ""}<b>${escapeHtml(c.name)}</b>${c.tailored ? `<div class="tailor-pill">Zuschnitt: ${escapeHtml(c.tailored.role || "ohne Stellenbezeichnung")}</div>` : ""}</td>
         <td><code>${escapeHtml(c.password)}</code></td>
         <td>${c.opened ? `<span class="pill opened">Geöffnet ${fmtDate(c.openedAt)}</span>` : `<span class="pill pending">Noch nicht geöffnet</span>`}</td>
         <td>${visited.length ? visited.map(p => escapeHtml(visitedLabel(p, code))).join(", ") : "–"}</td>
@@ -3328,7 +3351,7 @@ function render() {
   if (STATE.toast) html += `<div class="toast">${escapeHtml(STATE.toast)}</div>`;
 
   const _co = (r.view === "home" || r.view === "detail" || r.view === "skill") && STATE.companies ? STATE.companies[r.code] : null;
-  applyTheme(_co ? _co.accent : "");
+  applyTheme(_co ? _co.accent : "", _co ? _co.accent2 : "");
   root.innerHTML = html;
 
   if (r.view === "login") attachLoginHandlers();
