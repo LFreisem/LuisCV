@@ -158,8 +158,10 @@ html.pdf-mode body::before { display: none !important; }
 .pdf-entry .body { min-width: 0; }
 .pdf-entry .l1, .pdf-entry .l2 { line-height: 1.35; }
 .pdf-sheet ul.cvlist { font-size: .93em; margin-top: .1em; }
-.pdf-sheet ul.cvlist li { padding-left: 1.4em; margin: .05em 0; line-height: 1.35; }
-.pdf-sheet ul.cvlist li::before { width: .55em; height: .55em; border-width: .1em; top: .42em; left: .08em; }
+/* Aufzählungen im PDF ohne Positionierung: sonst malt der Browser den Text der Punkte erst nach allem anderen
+   (in der PDF-Textebene landen sie am Seitenende) und Markieren/Kopieren liefert die Reihenfolge durcheinander. */
+.pdf-sheet ul.cvlist li { position: static; padding-left: 1.4em; margin: .05em 0; line-height: 1.35; }
+.pdf-sheet ul.cvlist li::before { position: static; float: left; margin: .42em 0 0 -1.32em; width: .55em; height: .55em; border-width: .1em; }
 .pdf-skill { display: grid; grid-template-columns: 27mm 1fr; column-gap: 3.2mm; margin: .35em 0; }
 .pdf-skill .lab { text-align: right; }
 .pdf-skill .val { min-width: 0; }
@@ -1685,6 +1687,11 @@ const LEGACY_PAGE_TITLES = {
 const ICON_CHEVRON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_BACK = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+// Gibt es irgendwo echte Fotos? Nur dann werden Fotos in Hinweistexten erwähnt.
+function hasAnyPhotos(c) {
+  return ID_LISTS.some((k) => ((c && c[k]) || []).some((e) => e && Array.isArray(e.photos) && e.photos.some(isRealPhoto)));
+}
+
 function isNote(b) { return /^(?:vrstl\.?|voraussichtlich)?\s*Note:/i.test(String(b || "").trim()); }
 
 // Zeitraum für die Anzeige: " – " und "vrstl. " bleiben beim jeweils folgenden Wort, sonst bricht die schmale Datumsspalte unschön um
@@ -1813,7 +1820,7 @@ function renderHome(code) {
     ${sections.map((s, n) => `
     <section>
       <div class="sec-head"><span class="bar"></span><h2>${escapeHtml(SECTION_TITLES[s.key])}</h2></div>
-      ${n === 0 && anyClickable ? `<div class="hint">Stationen anklicken – dahinter stehen die ausführlichen Geschichten und Fotos.</div>` : ""}
+      ${n === 0 && anyClickable ? `<div class="hint">Stationen anklicken – dahinter stehen die ausführlichen Geschichten${hasAnyPhotos(c) ? " und Fotos" : ""}.</div>` : ""}
       ${s.list.map((e, i) => hidden(s.key, i) ? "" : renderEntryRow(s.key, e, i, rel)).join("")}
     </section>`).join("")}
 
@@ -1895,7 +1902,7 @@ function renderCvPdf() {
       ${secHead("Interaktiver Lebenslauf")}
       <div class="pdf-skill"><div class="lab">Adresse</div><div class="val"><a href="${escapeHtml(url)}">${escapeHtml(shown)}</a></div></div>
       <div class="pdf-skill"><div class="lab">Passwort</div><div class="val"><b class="pdf-pw">${escapeHtml(co.password)}</b>${co.expiresAt ? ` <span class="pdf-soft">(gültig bis ${fmtDay(co.expiresAt)})</span>` : ""}</div></div>
-      <div class="pdf-note">Mit ausführlichen Beschreibungen der Stationen, Projekten und Fotos.</div>`;
+      <div class="pdf-note">Mit ausführlichen Beschreibungen${hasAnyPhotos(c) ? " und Fotos" : ""} zu Stationen und Projekten.</div>`;
   }
 
   return `
