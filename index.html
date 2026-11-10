@@ -164,6 +164,7 @@ html.pdf-mode body::before { display: none !important; }
 .pdf-skill .lab { text-align: right; }
 .pdf-skill .val { min-width: 0; }
 .pdf-pw { letter-spacing: .02em; }
+.pdf-date { margin-top: 1.5em; }
 .pdf-soft { color: var(--soft); font-size: .92em; }
 .pdf-note { margin: .15em 0 0 calc(27mm + 3.2mm); font-style: italic; color: var(--soft); font-size: .9em; }
 @media print {
@@ -1149,8 +1150,8 @@ const CONTENT_PATCHES = {
         ["equeo", e => /equeo/i.test(e.org || "")]
       ],
       education: [
-        ["master", e => /Master/i.test(e.title || "")],
-        ["bachelor", e => /Bachelor/i.test(e.title || "")],
+        ["master", e => /Master|M\.Eng/i.test(e.title || "")],
+        ["bachelor", e => /Bachelor|B\.Eng/i.test(e.title || "")],
         ["mint", e => /MINTgr/i.test(e.title || "")],
         ["polizei", e => /Polizei/i.test(e.title || "")],
         ["abitur", e => /Abitur/i.test(e.title || "")]
@@ -1346,6 +1347,24 @@ const CONTENT_PATCHES = {
     }
     if (!c.skillPages || typeof c.skillPages !== "object") c.skillPages = {};
     if (!c.skillPages["MATLAB"]) c.skillPages["MATLAB"] = JSON.parse(JSON.stringify(MATLAB_SKILL_PAGE));
+    return true;
+  },
+
+  /* Ausbildung: Fach steht vorn, der Abschluss steht abgekürzt in Klammern am Ende der Zeile. Master mit
+     voraussichtlichem Ende und voraussichtlicher Note (Durchschnitt der bisher bestandenen Module).
+     Ändert nur Felder, die noch dem alten Standardtext entsprechen. Muss nach den Patches laufen, die die
+     festen IDs über den alten Titel vergeben (DEFAULT_CONTENT behält deshalb die alten Titel). */
+  "edu-format-v1": (c) => {
+    const edu = Array.isArray(c.education) ? c.education : [];
+    const master = edu.find(e => e && (e.id === "master" || /Master/i.test(e.title || "")));
+    if (master) {
+      if (master.title === "Master of Engineering (M.Eng.) Maschinenbau, erneuerbare Energien") master.title = "Maschinenbau, erneuerbare Energien (M.Eng.)";
+      if (master.when === "10/2025 – 10/2027") master.when = "10/2025 – vrstl. 10/2027";
+      if (!Array.isArray(master.bullets)) master.bullets = [];
+      if (!master.bullets.some((b) => isNote(b))) master.bullets.unshift("vrstl. Note: 1,7");
+    }
+    const bach = edu.find(e => e && (e.id === "bachelor" || /Bachelor/i.test(e.title || "")));
+    if (bach && bach.title === "Bachelor of Engineering (B.Eng.) Maschinenbau") bach.title = "Maschinenbau (B.Eng.)";
     return true;
   }
 };
@@ -1666,7 +1685,12 @@ const LEGACY_PAGE_TITLES = {
 const ICON_CHEVRON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_BACK = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-function isNote(b) { return /^Note:/i.test(String(b || "").trim()); }
+function isNote(b) { return /^(?:vrstl\.?|voraussichtlich)?\s*Note:/i.test(String(b || "").trim()); }
+
+// Zeitraum für die Anzeige: " – " und "vrstl. " bleiben beim jeweils folgenden Wort, sonst bricht die schmale Datumsspalte unschön um
+function whenHtml(w) {
+  return escapeHtml(w || "").replace(/ – /g, "&nbsp;– ").replace(/\b(vrstl\.|voraussichtlich) /gi, "$1&nbsp;");
+}
 
 // "H2Power n Heat, Berlin" -> <i>H2Power n Heat</i>, Berlin
 function orgHtml(org) {
@@ -1709,7 +1733,7 @@ function renderEntryRow(key, e, i, rel) {
     : `class="entry${isRel ? " rel" : ""}"`;
   return `
     <div ${attrs}>
-      <div class="when">${escapeHtml(e.when || "")}</div>
+      <div class="when">${whenHtml(e.when)}</div>
       <div class="body">${isRel ? `<div class="relmark">${TAILOR_REL_TEXT}</div>` : ""}${entryTitleHtml(e)}${bulletList(plain)}</div>
       ${clickable ? `<span class="chev">${ICON_CHEVRON}</span>` : ""}
     </div>`;
@@ -1842,6 +1866,12 @@ function renderCvPdf() {
   if (STATE.pdfCompany && !co) STATE.pdfCompany = "";
   const { hidden, sections } = cvSections(c);
   const showAccess = !!(co && STATE.pdfAccess !== false);
+  const showDate = STATE.pdfDate !== false;
+  const dateLine = (() => {
+    const day = new Date().toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" });
+    const place = String(c.location || "").trim();
+    return place ? place + ", " + day : day;
+  })();
 
   const opts = Object.entries(STATE.companies || {})
     .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0))
@@ -1854,7 +1884,7 @@ function renderCvPdf() {
   const secHead = (title) => `<div class="pdf-sec"><span class="bar"></span><h2>${escapeHtml(title)}</h2></div>`;
   const entry = (e) => {
     const plain = (e.bullets || []).filter(b => !isNote(b));
-    return `<div class="pdf-entry"><div class="when">${escapeHtml(e.when || "")}</div><div class="body">${entryTitleHtml(e)}${bulletList(plain)}</div></div>`;
+    return `<div class="pdf-entry"><div class="when">${whenHtml(e.when)}</div><div class="body">${entryTitleHtml(e)}${bulletList(plain)}</div></div>`;
   };
 
   let access = "";
@@ -1880,6 +1910,7 @@ function renderCvPdf() {
         <select id="pdf-company"><option value="">Allgemein (Standardfarben)</option>${opts}</select>
       </label>
       <label class="pdf-check"><input type="checkbox" id="pdf-access"${showAccess ? " checked" : ""}${co ? "" : " disabled"}> Adresse &amp; Passwort einblenden</label>
+      <label class="pdf-check"><input type="checkbox" id="pdf-date"${showDate ? " checked" : ""}> Ort &amp; Datum unten</label>
       <button class="btn" id="pdf-print">Als PDF speichern</button>
       <span class="pdf-info" id="pdf-info"></span>
     </div>
@@ -1901,6 +1932,7 @@ function renderCvPdf() {
         </section>`).join("")}
         ${skillRows ? `<section>${secHead("Kenntnisse & Fähigkeiten")}${skillRows}</section>` : ""}
         ${access ? `<section>${access}</section>` : ""}
+        ${showDate ? `<div class="pdf-date">${escapeHtml(dateLine)}</div>` : ""}
       </div>
     </div>
   </div>`;
@@ -1938,6 +1970,8 @@ function attachCvPdfHandlers() {
   if (sel) sel.addEventListener("change", () => { STATE.pdfCompany = sel.value; render(); });
   const chk = document.getElementById("pdf-access");
   if (chk) chk.addEventListener("change", () => { STATE.pdfAccess = chk.checked; render(); });
+  const chkDate = document.getElementById("pdf-date");
+  if (chkDate) chkDate.addEventListener("change", () => { STATE.pdfDate = chkDate.checked; render(); });
   const pr = document.getElementById("pdf-print");
   if (pr) pr.addEventListener("click", () => { fitPdf(); window.print(); });
   // Schrift erst messen, wenn sie geladen ist
@@ -2314,7 +2348,7 @@ function renderSkillPage(code, route) {
     const hit = b.ref ? entryById(c, b.ref) : null;
     const sub = hit ? subById(hit.entry, b.sub) : null;
     const where = hit
-      ? `<div class="sk-where"><span class="sk-when">${escapeHtml(hit.entry.when || "")}</span>${entryTitleHtml(hit.entry)}</div>`
+      ? `<div class="sk-where"><span class="sk-when">${whenHtml(hit.entry.when)}</span>${entryTitleHtml(hit.entry)}</div>`
       : (b.label ? `<div class="sk-where"><div class="l1"><b>${escapeHtml(b.label)}</b></div></div>` : "");
     const text = b.text && String(b.text).trim() ? `<div class="sk-text">${escapeHtml(b.text)}</div>` : "";
     const go = hit && hasDetail(hit.entry)
@@ -3313,7 +3347,7 @@ function renderDetail(code, key, index) {
     <div class="sec-head"><span class="bar"></span><h2>${escapeHtml(SECTION_TITLES[key] || "")}</h2></div>
 
     <div class="dgrid">
-      <div class="when">${escapeHtml(e.when || "")}</div>
+      <div class="when">${whenHtml(e.when)}</div>
       <div class="main">
         <h1 class="d-title">${escapeHtml(e.title || "")}</h1>
         ${orgLine ? `<div class="d-org">${orgLine}</div>` : ""}
