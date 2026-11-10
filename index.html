@@ -231,6 +231,36 @@ table.simple tr:last-child td { border-bottom: none; }
 .pill { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 10px; }
 .pill.opened { background: #e6f1e8; color: var(--ok); }
 .pill.pending { background: #f1f1f1; color: #777; }
+.pill.active { background: #e6f1e8; color: var(--ok); }
+.pill.expired { background: #fbf0dc; color: #8a5a00; }
+.pill.revoked { background: #f6e3e3; color: var(--err); }
+.admin-nav { display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
+.admin-nav a { color: var(--soft); text-decoration: none; border-bottom: 1px solid transparent; cursor: pointer; }
+.admin-nav a:hover { color: var(--ink); }
+.admin-nav a.on { color: var(--ink); border-bottom-color: var(--ink); }
+.admin-shell.wide { max-width: 1120px; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table.simple code { white-space: nowrap; }
+.stat-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { border: 1px solid #c9c9c9; border-radius: var(--radius); padding: 14px 16px; background: #fff; }
+.stat-card .n { font-size: 30px; line-height: 1.1; }
+.stat-card .n.sm { font-size: 19px; line-height: 1.3; }
+.stat-card .n .of { font-size: 16px; color: var(--soft); }
+.stat-card .l { font-size: 12.5px; color: var(--soft); margin-top: 4px; }
+@media (max-width: 720px) { .stat-cards { grid-template-columns: repeat(2, 1fr); } }
+table.simple tr.sel td { background: var(--hover); }
+.access-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 20px; font-size: 13.5px; }
+.access-ctrl input[type=date] { font: inherit; font-size: 13.5px; padding: 4px 8px; border: 1px solid #b9b9b9; border-radius: var(--radius); }
+.access-ctrl .spacer { flex: 1; }
+.stat-sub { font-size: 15px; font-weight: 400; font-style: italic; color: var(--soft); margin: 18px 0 6px; }
+.tl-wrap { max-height: 420px; overflow-y: auto; border-top: 1px solid var(--line); }
+.tag { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 10px; background: #eef1f5; color: #3d4f66; white-space: nowrap; }
+.tag.t-login { background: #e6f1e8; color: var(--ok); }
+.tag.t-contact { background: #e7edf8; color: #1f4d99; }
+.tag.t-skill { background: #f3ecf7; color: #5b3a73; }
+.tag.t-blocked { background: #f6e3e3; color: var(--err); }
+.inline-form .color-pick select { flex: none; padding: 6px 8px; font: inherit; font-size: 14px; border: 1px solid #b9b9b9; border-radius: var(--radius); }
 
 .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .icon-btn { background: none; border: 1px solid #c9c9c9; border-radius: var(--radius); cursor: pointer; font: inherit; font-size: 12.5px; padding: 3px 8px; color: var(--soft); }
@@ -264,6 +294,7 @@ textarea.editor { width: 100%; min-height: 90px; font: inherit; font-size: 14px;
 .loading-state { text-align: center; padding: 60px 0; color: var(--soft); font-size: 14px; }
 
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: var(--radius); font-size: 14px; z-index: 50; box-shadow: 0 4px 14px rgba(0,0,0,.25); max-width: 90vw; }
+.toast.error { background: var(--err); max-width: min(92vw, 520px); text-align: center; }
 
 /* Foto-Upload (Admin) + Lightbox */
 .photo-admin-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
@@ -439,7 +470,9 @@ window.__fbReady = true;
 /* ============================================================
    DATA MODEL
    - cv_content: object with all resume content (editable in admin)
-   - companies: { [code]: { name, password, createdAt, opened, openedAt, pagesVisited: {key: timestamp} } }
+   - companies: { [code]: { name, password, createdAt, opened, openedAt, pagesVisited: {key: timestamp},
+       expiresAt (ms, fehlt = unbegrenzt), revokedAt (ms, gesperrt), logins, lastLoginAt, blocked, lastBlockedAt } }
+   - cv_events_<code>: Verlauf je Bewerbung, Liste von { t: Typ, k: Schlüssel, l: Bezeichnung, at: ms } (max. 200)
    - admin password stored separately (default set on first run)
    ============================================================ */
 
@@ -627,27 +660,34 @@ async function waitForFirebase() {
   }
 }
 
-async function storageGet(key) {
+// Liest ein Dokument; ok=false heißt: Lesefehler (nicht "Dokument leer"), damit niemand
+// mit einem leeren Stand weiterarbeitet und bestehende Daten überschreibt.
+async function storageRead(key) {
   await waitForFirebase();
   try {
     const { doc, getDoc, db } = window.__fb;
     const snap = await getDoc(doc(db, FS_COLLECTION, key));
-    if (!snap.exists()) return null;
+    if (!snap.exists()) return { ok: true, value: null };
     const data = snap.data();
-    return data && typeof data.value === "string" ? data.value : null;
+    return { ok: true, value: data && typeof data.value === "string" ? data.value : null };
   } catch (e) {
     console.error("storageGet error", e);
-    return null;
+    return { ok: false, value: null };
   }
+}
+async function storageGet(key) {
+  return (await storageRead(key)).value;
 }
 async function storageSet(key, value) {
   await waitForFirebase();
   try {
     const { doc, setDoc, db } = window.__fb;
     await setDoc(doc(db, FS_COLLECTION, key), { value });
+    STATE.lastSaveError = "";
     return true;
   } catch (e) {
     console.error("storageSet error", e);
+    STATE.lastSaveError = (e && (e.code || e.message)) || "unbekannter Fehler";
     return false;
   }
 }
@@ -1270,6 +1310,16 @@ async function loadCompanies() {
 async function saveCompanies(companies) {
   return storageSet(COMPANIES_KEY, JSON.stringify(companies));
 }
+// wie loadCompanies, liefert aber null bei Lesefehler (dann nichts zurückschreiben!)
+async function loadCompaniesChecked() {
+  const r = await storageRead(COMPANIES_KEY);
+  if (!r.ok) return null;
+  if (!r.value) return {};
+  try {
+    const o = JSON.parse(r.value);
+    return o && typeof o === "object" ? o : null;
+  } catch (e) { return null; }
+}
 
 async function loadAdminPw() {
   const raw = await storageGet(ADMIN_PW_KEY);
@@ -1348,11 +1398,33 @@ window.addEventListener("popstate", function(e) {
   window.scrollTo(0, SCROLL_POS[routeId(STATE.route)] || 0);
 });
 
-function showToast(msg) {
-  STATE.toast = msg;
-  render();
-  setTimeout(() => { STATE.toast = null; const _t = document.querySelector(".toast"); if (_t) _t.remove(); }, 2200);
+// Meldung als eigenes Element einblenden – ohne die Seite neu aufzubauen,
+// damit nichts verworfen wird, was gerade eingetippt wird.
+// (Wer danach die Ansicht aktualisieren muss, ruft render() selbst auf.)
+let toastTimer = null;
+function showToast(msg, isError) {
+  let el = document.getElementById("toast-live");
+  if (!el) { el = document.createElement("div"); el.id = "toast-live"; document.body.appendChild(el); }
+  el.className = "toast" + (isError ? " error" : "");
+  el.textContent = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { const t = document.getElementById("toast-live"); if (t) t.remove(); }, isError ? 7000 : 2200);
 }
+
+// Speichert den Inhalt und meldet ehrlich, ob die Datenbank ihn angenommen hat.
+async function persistContent(okMsg) {
+  const ok = await saveContent(STATE.content);
+  STATE.saveFailed = !ok;
+  if (!ok) {
+    showToast("Speichern fehlgeschlagen" + (STATE.lastSaveError ? " (" + STATE.lastSaveError + ")" : "") + " – Änderungen sind NICHT gesichert.", true);
+  } else if (okMsg) {
+    showToast(okMsg);
+  }
+  return ok;
+}
+window.addEventListener("beforeunload", (e) => {
+  if (STATE.saveFailed) { e.preventDefault(); e.returnValue = ""; }
+});
 
 async function init() {
   document.getElementById("root").innerHTML = '<div class="loading-state">Lade Inhalte …</div>';
@@ -1397,18 +1469,29 @@ function attachLoginHandlers() {
       e.preventDefault();
       const val = document.getElementById("pw-input").value.trim();
       if (!val) return;
-      const match = Object.entries(STATE.companies).find(([code, c]) => c.password === val);
+      // aktuellen Stand holen: Sperren/Ablauf/neue Passwörter gelten sofort, auch bei offener Seite
+      const fresh = await loadCompaniesChecked();
+      if (fresh) STATE.companies = fresh;
+      const match = Object.entries(STATE.companies || {}).find(([code, c]) => c.password === val);
       if (!match) {
         STATE.loginError = "Dieses Passwort ist nicht gültig. Bitte prüfen und erneut versuchen.";
         render();
         return;
       }
       const [code, company] = match;
-      if (!company.opened) {
-        company.opened = true;
-        company.openedAt = Date.now();
-        await saveCompanies(STATE.companies);
+      const st = companyStatus(company);
+      if (st !== "active") {
+        await recordBlocked(code, st);
+        STATE.loginError = accessMessage(st);
+        render();
+        return;
       }
+      await updateCompany(code, (co) => {
+        if (!co.opened) { co.opened = true; co.openedAt = Date.now(); }
+        co.logins = (co.logins || 0) + 1;
+        co.lastLoginAt = Date.now();
+      });
+      logEvent(code, "login", "", "Mit Passwort angemeldet");
       STATE.loginError = "";
       await loadTailor(code);
       setRoute({ view: "home", code });
@@ -1481,6 +1564,11 @@ async function updateCompanyAccent(code, hex) {
   if (h) fresh[code].accent = h; else { delete fresh[code].accent; delete fresh[code].accent2; }
   await saveCompanies(fresh);
   STATE.companies = fresh;
+}
+async function updateCompanyAccentAndRefresh(code, hex, msg) {
+  await updateCompanyAccent(code, hex);
+  render();
+  showToast(msg);
 }
 
 /* ============================================================
@@ -1636,24 +1724,126 @@ function renderHome(code) {
   </div>`;
 }
 
-// Besuche pro Station mitschreiben (liest vor dem Schreiben neu, damit zwischenzeitlich
-// angelegte Firmen nicht überschrieben werden)
-let TRACK_CHAIN = Promise.resolve();
-function trackVisit(code, pageKey) {
-  TRACK_CHAIN = TRACK_CHAIN.then(async () => {
+/* ============================================================
+   ZUGANG: Gültigkeit, Sperren, Ereignisprotokoll
+   Hinweis: Das ist eine Zugangsschranke der Seite (und Grundlage der Auswertung),
+   kein technischer Schutz – die Inhalte selbst liegen unverschlüsselt in Seite und Datenbank.
+   ============================================================ */
+const DAY_MS = 86400000;
+const DEFAULT_VALID_DAYS = 90;           // Vorgabe für NEUE Bewerbungen; bestehende bleiben unbegrenzt
+const EVENTS_PREFIX = "cv_events_";
+const EVENT_CAP = 200;                   // so viele Einzelereignisse je Bewerbung werden behalten
+
+function endOfDay(ts) { const d = new Date(ts); d.setHours(23, 59, 59, 999); return d.getTime(); }
+function expiryFromDays(days) { return days > 0 ? endOfDay(Date.now() + days * DAY_MS) : null; }
+function fmtDay(ts) {
+  return ts ? new Date(ts).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) : "–";
+}
+function toInputDate(ts) {
+  const d = new Date(ts), p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+function fromInputDate(v) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || "");
+  return m ? endOfDay(new Date(+m[1], +m[2] - 1, +m[3]).getTime()) : null;
+}
+
+// "active" | "expired" | "revoked" | "gone" (Eintrag existiert nicht mehr). Sperre geht vor Ablauf.
+function companyStatus(c, now) {
+  if (!c) return "gone";
+  if (c.revokedAt) return "revoked";
+  if (c.expiresAt && c.expiresAt <= (now || Date.now())) return "expired";
+  return "active";
+}
+function accessPill(c) {
+  const st = companyStatus(c);
+  if (st === "revoked") return `<span class="pill revoked">Gesperrt</span>`;
+  if (st === "expired") return `<span class="pill expired">Abgelaufen</span>`;
+  return `<span class="pill active">Aktiv</span>`;
+}
+function validityNote(c) {
+  if (c.revokedAt) return "gesperrt seit " + fmtDay(c.revokedAt);
+  if (!c.expiresAt) return "unbegrenzt gültig";
+  return (c.expiresAt <= Date.now() ? "abgelaufen am " : "gültig bis ") + fmtDay(c.expiresAt);
+}
+function accessMessage(st) {
+  const mail = STATE.content && STATE.content.email ? " Bei Fragen gern per E-Mail: " + STATE.content.email : "";
+  if (st === "revoked") return "Dieser Zugang wurde deaktiviert." + mail;
+  if (st === "expired") return "Dieser Zugang ist abgelaufen." + mail;
+  return "Dieser Zugang ist nicht mehr gültig." + mail;
+}
+
+// Ändert EINE Firma: liest vorher neu und schreibt dann, damit Tracking anderer Besucher und
+// Admin-Änderungen sich nicht gegenseitig überschreiben. fn(co) darf false liefern = nichts schreiben.
+// Ergebnis: { ok, co, gone }
+let COMPANY_CHAIN = Promise.resolve();
+function updateCompany(code, fn) {
+  const run = COMPANY_CHAIN.then(async () => {
+    const fresh = await loadCompaniesChecked();
+    if (!fresh) return { ok: false, co: null, gone: false };
+    const co = fresh[code];
+    if (!co) { STATE.companies = fresh; return { ok: true, co: null, gone: true }; }
+    if (fn(co) === false) { STATE.companies = fresh; return { ok: true, co, gone: false }; }
+    const ok = await saveCompanies(fresh);
+    if (ok) STATE.companies = fresh;
+    return { ok, co, gone: false };
+  }).catch((err) => { console.error("updateCompany", err); return { ok: false, co: null, gone: false }; });
+  COMPANY_CHAIN = run;
+  return run;
+}
+
+// Einzelereignisse je Bewerbung (eigenes Dokument, damit die Firmenliste klein bleibt)
+let EVENT_CHAIN = Promise.resolve();
+function logEvent(code, type, key, label) {
+  if (STATE.isAdminAuthed) return Promise.resolve();       // Vorschau aus dem Admin zählt nicht
+  EVENT_CHAIN = EVENT_CHAIN.then(async () => {
     try {
-      const fresh = await loadCompanies();
-      const co = fresh[code];
-      if (!co) return;
-      co.pagesVisited = co.pagesVisited || {};
-      co.pagesVisited[pageKey] = Date.now();
-      await saveCompanies(fresh);
-      STATE.companies = fresh;
+      const r = await storageRead(EVENTS_PREFIX + code);
+      if (!r.ok) return;                                    // Lesefehler: lieber ein Ereignis verlieren als das Protokoll
+      let list = [];
+      if (r.value) { try { list = JSON.parse(r.value); } catch (e) { list = []; } }
+      if (!Array.isArray(list)) list = [];
+      list.push({ t: type, k: key || "", l: String(label || "").slice(0, 160), at: Date.now() });
+      if (list.length > EVENT_CAP) list = list.slice(-EVENT_CAP);
+      await storageSet(EVENTS_PREFIX + code, JSON.stringify(list));
     } catch (err) {
-      console.error("trackVisit", err);
+      console.error("logEvent", err);
     }
   });
-  return TRACK_CHAIN;
+  return EVENT_CHAIN;
+}
+async function loadEvents(code) {
+  const r = await storageRead(EVENTS_PREFIX + code);
+  if (!r.ok || !r.value) return [];
+  try { const l = JSON.parse(r.value); return Array.isArray(l) ? l : []; } catch (e) { return []; }
+}
+
+// Besuche pro Station mitschreiben (Zeitpunkt des letzten Aufrufs + Einzelereignis).
+// Prüft dabei nebenbei, ob der Zugang inzwischen abgelaufen/gesperrt/gelöscht wurde.
+function trackVisit(code, pageKey) {
+  const label = visitedLabel(pageKey, code);
+  const type = pageKey.indexOf("skill:") === 0 ? "skill" : pageKey.indexOf("match:") === 0 ? "match" : "station";
+  return updateCompany(code, (co) => {
+    if (companyStatus(co) !== "active") return false;
+    co.pagesVisited = co.pagesVisited || {};
+    co.pagesVisited[pageKey] = Date.now();
+  }).then((r) => {
+    if (!r.ok) return;
+    const st = companyStatus(r.co);
+    if (st !== "active") { render(); return; }               // render() leitet auf die Anmeldung um
+    return logEvent(code, type, pageKey, label);
+  });
+}
+
+// Fehlversuch auf gesperrten/abgelaufenen Zugang festhalten (Zähler + Protokolleintrag, gedrosselt)
+async function recordBlocked(code, st) {
+  let log = true;
+  await updateCompany(code, (co) => {
+    log = Date.now() - (co.lastBlockedAt || 0) > 10 * 60 * 1000;
+    co.blocked = (co.blocked || 0) + 1;
+    co.lastBlockedAt = Date.now();
+  });
+  if (log) await logEvent(code, "blocked", st, st === "revoked" ? "Login-Versuch auf gesperrten Zugang" : "Login-Versuch auf abgelaufenen Zugang");
 }
 
 function openEntry(code, key, index, sub) {
@@ -1691,6 +1881,14 @@ function attachHomeHandlers(code) {
   });
   document.querySelectorAll(".skilllink").forEach(el => {
     el.addEventListener("click", () => openSkill(code, el.getAttribute("data-skill")));
+  });
+  document.querySelectorAll(".cv-contact a").forEach(a => {
+    a.addEventListener("click", () => {
+      const href = a.getAttribute("href") || "";
+      if (href.indexOf("tel:") === 0) logEvent(code, "contact", "tel", "Telefonnummer angeklickt");
+      else if (href.indexOf("mailto:") === 0) logEvent(code, "contact", "mail", "E-Mail-Adresse angeklickt");
+      else logEvent(code, "contact", "linkedin", "LinkedIn-Profil geöffnet");
+    });
   });
   attachTailorHandlers(code);
   const logout = document.getElementById("logout-link");
@@ -1961,8 +2159,7 @@ function attachSkillAdminHandlers() {
   const sel = (a) => document.querySelectorAll(`[data-action="${a}"]`);
   sel("sp-save").forEach(btn => btn.addEventListener("click", async () => {
     syncSkillPages();
-    await saveContent(STATE.content);
-    showToast("Gespeichert.");
+    await persistContent("Gespeichert.");
   }));
   sel("sp-add-block").forEach(btn => btn.addEventListener("click", () => {
     syncSkillPages();
@@ -1982,7 +2179,7 @@ function attachSkillAdminHandlers() {
   sel("sp-remove-page").forEach(btn => btn.addEventListener("click", async () => {
     syncSkillPages();
     delete STATE.content.skillPages[btn.getAttribute("data-sp-key")];
-    await saveContent(STATE.content);
+    await persistContent();
     render();
   }));
   sel("sp-add-page").forEach(btn => btn.addEventListener("click", () => {
@@ -2487,6 +2684,7 @@ async function tailorCreate() {
     let code;
     do { code = genCode(8); } while (fresh[code]);
     const entry = { name: res.company.name, password, createdAt: Date.now(), opened: false, openedAt: null, pagesVisited: {} };
+    if (DEFAULT_VALID_DAYS > 0) entry.expiresAt = expiryFromDays(DEFAULT_VALID_DAYS);
     if (res.company.accent) entry.accent = res.company.accent;
     if (res.company.accent2) entry.accent2 = res.company.accent2;
     if (res.hasTailor) {
@@ -2508,7 +2706,8 @@ async function tailorCreate() {
     STATE.tailorDraft[TAILOR_NEW] = "";
     STATE.tailorSel = code;
     STATE.tailorReport = { code, res: Object.assign({}, res, { saved: res.hasTailor, created: { code, name: entry.name, password, accent: entry.accent || "", accent2: entry.accent2 || "" } }) };
-    showToast(`Passwort für ${entry.name} erstellt: ${password}`);
+    render();
+    showToast(`Passwort für ${entry.name} erstellt: ${password}` + (entry.expiresAt ? ` (gültig bis ${fmtDay(entry.expiresAt)})` : ""));
   } finally {
     STATE.tailorBusy = false;
   }
@@ -2549,6 +2748,7 @@ function attachTailorAdminHandlers() {
     STATE.tailorDraft[cd] = tailorPretty(res.clean);
     await setCompanyTailored(cd, { role: res.clean.role, reqs: res.clean.matches.map(m => m.requirement), at: Date.now() });
     STATE.tailorReport = { code: cd, res: Object.assign({}, res, { saved: true }) };
+    render();
     showToast("Zuschnitt gespeichert.");
   });
   const prev = document.getElementById("tailor-preview");
@@ -2568,6 +2768,7 @@ function attachTailorAdminHandlers() {
     STATE.tailorDraft[cd] = "";
     STATE.tailorReport = null;
     await setCompanyTailored(cd, null);
+    render();
     showToast("Zuschnitt entfernt.");
   });
   document.querySelectorAll('[data-action="tailor-open"]').forEach(btn => {
@@ -2691,6 +2892,38 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLight
 document.addEventListener("click", (e) => {
   const img = e.target && e.target.closest ? e.target.closest(".photo-slot.clickable img") : null;
   if (img && !img.classList.contains("loading")) openLightbox(img.src);
+});
+
+/* Admin-Eingaben werden sofort in STATE übernommen (so verwirft ein Neuaufbau der Seite nichts)
+   und beim Verlassen eines Feldes automatisch in Firestore gespeichert. */
+const ADMIN_FIELD_SELECTOR = "[data-entry-field],[data-section-field],[data-field],[data-skill-field],[data-sp-field]";
+function syncFieldToState(el) {
+  if (!STATE.content) return;
+  if (el.hasAttribute("data-entry-field") || el.hasAttribute("data-section-field")) {
+    syncEntryFields(el.getAttribute("data-key"));
+  } else if (el.hasAttribute("data-sp-field")) {
+    syncSkillPages();
+  } else if (el.hasAttribute("data-field")) {
+    STATE.content[el.getAttribute("data-field")] = el.value;
+  } else if (el.hasAttribute("data-skill-field")) {
+    const idx = parseInt(el.getAttribute("data-index"), 10);
+    const g = STATE.content.skillGroups && STATE.content.skillGroups[idx];
+    if (!g) return;
+    const f = el.getAttribute("data-skill-field");
+    g[f] = f === "items" ? el.value.split(",").map(s => s.trim()).filter(Boolean) : el.value;
+  }
+}
+document.addEventListener("input", (e) => {
+  if (!STATE.isAdminAuthed) return;
+  const el = e.target && e.target.closest ? e.target.closest(ADMIN_FIELD_SELECTOR) : null;
+  if (el) syncFieldToState(el);
+});
+document.addEventListener("change", (e) => {
+  if (!STATE.isAdminAuthed) return;
+  const el = e.target && e.target.closest ? e.target.closest(ADMIN_FIELD_SELECTOR) : null;
+  if (!el) return;
+  syncFieldToState(el);
+  persistContent("Gespeichert.");
 });
 
 // Übernimmt die aktuellen Eingaben der Einträge aus dem DOM in STATE (ohne zu speichern)
@@ -2851,12 +3084,14 @@ function renderAdminLogin() {
 function attachAdminLoginHandlers() {
   const form = document.getElementById("admin-login-form");
   if (form) {
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const val = document.getElementById("admin-pw-input").value;
       if (val === STATE.adminPw) {
         STATE.isAdminAuthed = true;
         STATE.adminLoginError = "";
+        const fresh = await loadCompaniesChecked();      // aktuelles Tracking statt Stand vom Seitenaufruf
+        if (fresh) STATE.companies = fresh;
         setRoute({ view: "admin" });
       } else {
         STATE.adminLoginError = "Falsches Passwort.";
@@ -2883,14 +3118,16 @@ function renderAdmin() {
       <tr>
         <td>${safeHex(c.accent) ? `<span class="swatch" style="background:${swatchBg(c.accent, c.accent2)}"></span>` : ""}<b>${escapeHtml(c.name)}</b>${c.tailored ? `<div class="tailor-pill">Zuschnitt: ${escapeHtml(c.tailored.role || "ohne Stellenbezeichnung")}</div>` : ""}</td>
         <td><code>${escapeHtml(c.password)}</code></td>
-        <td>${c.opened ? `<span class="pill opened">Geöffnet ${fmtDate(c.openedAt)}</span>` : `<span class="pill pending">Noch nicht geöffnet</span>`}</td>
+        <td>${accessPill(c)}<div class="small-note" style="margin:3px 0 6px">${escapeHtml(validityNote(c))}</div>${c.opened ? `<span class="pill opened">Geöffnet ${fmtDate(c.openedAt)}</span>` : `<span class="pill pending">Noch nicht geöffnet</span>`}</td>
         <td>${visited.length ? visited.map(p => escapeHtml(visitedLabel(p, code))).join(", ") : "–"}</td>
         <td><div class="color-cell"><input type="color" data-action="company-color" data-code="${escapeHtml(code)}" value="${safeHex(c.accent) || "#111111"}" title="Firmenfarbe wählen"/>${safeHex(c.accent) ? `<button class="icon-btn" data-action="company-color-reset" data-code="${escapeHtml(code)}">Standard</button>` : `<span class="small-note" style="margin:0">Standard</span>`}</div></td>
         <td>
           <div class="row-actions">
             <button class="icon-btn" data-action="preview" data-code="${escapeHtml(code)}">Vorschau</button>
             <button class="icon-btn" data-action="tailor-open" data-code="${escapeHtml(code)}">Zuschnitt</button>
+            <button class="icon-btn" data-action="stats-open" data-code="${escapeHtml(code)}">Auswertung</button>
             <button class="icon-btn" data-action="copy" data-code="${escapeHtml(code)}">Link kopieren</button>
+            ${revokeButton(code, c)}
             <button class="icon-btn danger" data-action="delete" data-code="${escapeHtml(code)}">Löschen</button>
           </div>
         </td>
@@ -2902,7 +3139,7 @@ function renderAdmin() {
   return `
   <div class="app admin-shell">
     <div class="topbar">
-      <div class="crumbs">Admin-Bereich</div>
+      ${adminNav("admin")}
       <div class="session"><a id="admin-logout" href="#" style="color:inherit;">Abmelden</a></div>
     </div>
 
@@ -2911,18 +3148,22 @@ function renderAdmin() {
       <div class="inline-form">
         <input id="new-company-name" type="text" placeholder="Firmenname, z. B. Porsche AG" />
         <label class="color-pick" title="Firmenfarbe (optional)"><input type="checkbox" id="new-company-usecolor"> Firmenfarbe <input type="color" id="new-company-color" value="#d5001c"></label>
+        <label class="color-pick" title="Wie lange das Passwort gilt">Gültig <select id="new-company-valid">
+          <option value="30">30 Tage</option><option value="60">60 Tage</option><option value="90" selected>90 Tage</option><option value="180">180 Tage</option><option value="0">unbegrenzt</option>
+        </select></label>
         <button class="btn" id="create-company-btn">Passwort generieren</button>
       </div>
-      <div class="small-note">Es wird automatisch ein eindeutiges Passwort erzeugt, das du an die Firma weitergeben kannst. Mit Firmenfarbe färbt sich die Seite (Balken, Aufzählungen, Hover) in dieser Farbe ein. Für eine Bewerbung mit Zuschnitt auf die Stelle: weiter unten bei "Zuschnitt pro Bewerbung" die Option "Neue Bewerbung anlegen" nutzen.</div>
+      <div class="small-note">Es wird automatisch ein eindeutiges Passwort erzeugt, das du an die Firma weitergeben kannst. Nach Ablauf der Gültigkeit (oder nach „Sperren“) lässt sich die Seite mit diesem Passwort nicht mehr öffnen; verlängern oder freigeben geht jederzeit in der Auswertung. Mit Firmenfarbe färbt sich die Seite (Balken, Aufzählungen, Hover) in dieser Farbe ein. Für eine Bewerbung mit Zuschnitt auf die Stelle: weiter unten bei "Zuschnitt pro Bewerbung" die Option "Neue Bewerbung anlegen" nutzen.</div>
     </div>
 
     <div class="panel">
       <h2>Bewerbungen &amp; Tracking</h2>
       ${companyRows ? `
-        <table class="simple">
-          <thead><tr><th>Firma</th><th>Passwort</th><th>Status</th><th>Aufgerufene Seiten</th><th>Farbe</th><th></th></tr></thead>
+        <div class="table-scroll"><table class="simple">
+          <thead><tr><th>Firma</th><th>Passwort</th><th>Zugang &amp; Status</th><th>Aufgerufene Seiten</th><th>Farbe</th><th></th></tr></thead>
           <tbody>${companyRows}</tbody>
-        </table>` : `<div class="empty-note">Noch keine Bewerbungen angelegt.</div>`}
+        </table></div>
+        <div class="small-note">Alle Klicks, Logins und den Verlauf je Bewerbung siehst du unter „Auswertung“.</div>` : `<div class="empty-note">Noch keine Bewerbungen angelegt.</div>`}
     </div>
 
     ${renderTailorPanel()}
@@ -3044,20 +3285,26 @@ function renderSkillsEditor(skillGroups) {
 function attachAdminHandlers() {
   attachSkillAdminHandlers();
   attachTailorAdminHandlers();
+  attachAdminNavHandlers();
+  attachAccessHandlers();
+  document.querySelectorAll('[data-action="stats-open"]').forEach(btn => {
+    btn.addEventListener("click", async () => {
+      STATE.statsSel = btn.getAttribute("data-code");
+      await openStats();
+    });
+  });
   const _uc = document.getElementById("new-company-usecolor");
   const _cc = document.getElementById("new-company-color");
   if (_uc && _cc) _cc.addEventListener("input", () => { _uc.checked = true; });
 
   document.querySelectorAll('[data-action="company-color"]').forEach(inp => {
     inp.addEventListener("change", async () => {
-      await updateCompanyAccent(inp.getAttribute("data-code"), inp.value);
-      showToast("Firmenfarbe gespeichert.");
+      await updateCompanyAccentAndRefresh(inp.getAttribute("data-code"), inp.value, "Firmenfarbe gespeichert.");
     });
   });
   document.querySelectorAll('[data-action="company-color-reset"]').forEach(btn => {
     btn.addEventListener("click", async () => {
-      await updateCompanyAccent(btn.getAttribute("data-code"), "");
-      showToast("Standardfarben aktiv.");
+      await updateCompanyAccentAndRefresh(btn.getAttribute("data-code"), "", "Standardfarben aktiv.");
     });
   });
   document.querySelectorAll('[data-action="preview"]').forEach(btn => {
@@ -3077,16 +3324,24 @@ function attachAdminHandlers() {
       const nameInput = document.getElementById("new-company-name");
       const name = nameInput.value.trim();
       if (!name) { showToast("Bitte einen Firmennamen eingeben."); return; }
+      const fresh = await loadCompaniesChecked();
+      if (!fresh) { showToast("Anlegen nicht möglich: Die Bewerbungen konnten nicht geladen werden. Bitte erneut versuchen.", true); return; }
       let code;
-      do { code = genCode(8); } while (STATE.companies[code]);
-      const password = genPassword();
-      STATE.companies[code] = { name, password, createdAt: Date.now(), opened: false, openedAt: null, pagesVisited: {} };
+      do { code = genCode(8); } while (fresh[code]);
+      const used = new Set(Object.values(fresh).map(x => x && x.password));
+      let password;
+      do { password = genPassword(); } while (used.has(password));
+      const days = parseInt((document.getElementById("new-company-valid") || {}).value, 10) || 0;
+      fresh[code] = { name, password, createdAt: Date.now(), opened: false, openedAt: null, pagesVisited: {} };
+      if (days > 0) fresh[code].expiresAt = expiryFromDays(days);
       const _useC = document.getElementById("new-company-usecolor");
-      if (_useC && _useC.checked) STATE.companies[code].accent = safeHex(document.getElementById("new-company-color").value);
-      await saveCompanies(STATE.companies);
+      if (_useC && _useC.checked) fresh[code].accent = safeHex(document.getElementById("new-company-color").value);
+      const okNew = await saveCompanies(fresh);
+      if (!okNew) { showToast("Speichern fehlgeschlagen – die Bewerbung wurde NICHT angelegt.", true); return; }
+      STATE.companies = fresh;
       nameInput.value = "";
-      showToast(`Passwort für ${name} erstellt: ${password}`);
       render();
+      showToast(`Passwort für ${name} erstellt: ${password}` + (days > 0 ? ` (gültig bis ${fmtDay(fresh[code].expiresAt)})` : " (unbegrenzt gültig)"));
     });
   }
 
@@ -3106,10 +3361,16 @@ function attachAdminHandlers() {
   document.querySelectorAll('[data-action="delete"]').forEach(btn => {
     btn.addEventListener("click", async () => {
       const code = btn.getAttribute("data-code");
-      if (!confirm(`Eintrag für "${STATE.companies[code].name}" wirklich löschen?`)) return;
-      delete STATE.companies[code];
-      await saveCompanies(STATE.companies);
+      if (!confirm(`Eintrag für "${STATE.companies[code].name}" wirklich löschen?\n\nDamit gehen auch Tracking und Auswertung dieser Bewerbung verloren. Zum bloßen Deaktivieren besser „Sperren“ nutzen.`)) return;
+      const fresh = await loadCompaniesChecked();
+      if (!fresh) { showToast("Löschen nicht möglich: Die Bewerbungen konnten nicht geladen werden.", true); return; }
+      delete fresh[code];
+      const okDel = await saveCompanies(fresh);
+      if (!okDel) { showToast("Speichern fehlgeschlagen – der Eintrag wurde NICHT gelöscht.", true); return; }
+      STATE.companies = fresh;
       try { await storageSet(TAILOR_PREFIX + code, ""); if (STATE.tailor) delete STATE.tailor[code]; } catch (e) {}
+      try { const { doc, deleteDoc, db } = window.__fb; await deleteDoc(doc(db, FS_COLLECTION, EVENTS_PREFIX + code)); } catch (e) {}
+      if (STATE.events) delete STATE.events[code];
       render();
     });
   });
@@ -3121,8 +3382,7 @@ function attachAdminHandlers() {
         const field = input.getAttribute("data-field");
         STATE.content[field] = input.value;
       });
-      await saveContent(STATE.content);
-      showToast("Profil gespeichert.");
+      await persistContent("Profil gespeichert.");
     });
   }
 
@@ -3156,7 +3416,7 @@ function attachAdminHandlers() {
       const entry = STATE.content[key][idx];
       if (!entry || !Array.isArray(entry.sections)) return;
       entry.sections.splice(sidx, 1);
-      await saveContent(STATE.content);
+      await persistContent();
       render();
     });
   });
@@ -3175,7 +3435,7 @@ function attachAdminHandlers() {
       const tmp = entry.sections[sidx];
       entry.sections[sidx] = entry.sections[target];
       entry.sections[target] = tmp;
-      await saveContent(STATE.content);
+      await persistContent();
       render();
     });
   });
@@ -3185,7 +3445,7 @@ function attachAdminHandlers() {
       const key = btn.getAttribute("data-key");
       const idx = parseInt(btn.getAttribute("data-index"), 10);
       STATE.content[key].splice(idx, 1);
-      await saveContent(STATE.content);
+      await persistContent();
       render();
     });
   });
@@ -3194,8 +3454,7 @@ function attachAdminHandlers() {
     btn.addEventListener("click", async () => {
       const key = btn.getAttribute("data-key");
       syncEntryFields(key);
-      await saveContent(STATE.content);
-      showToast("Gespeichert.");
+      await persistContent("Gespeichert.");
     });
   });
 
@@ -3231,8 +3490,9 @@ function attachAdminHandlers() {
           failed.push(`${file.name} (${err.message})`);
         }
       }
-      if (added) await saveContent(STATE.content);
-      showToast(failed.length
+      const saved = added ? await persistContent() : true;
+      render();
+      if (saved) showToast(failed.length
         ? `${added} Foto(s) gespeichert. Fehler: ${failed.join("; ")}`
         : `${added} Foto(s) hochgeladen.`);
     });
@@ -3251,8 +3511,9 @@ function attachAdminHandlers() {
       if (!Array.isArray(entry.photos)) entry.photos = [];
       const empty = entry.photos.findIndex(p => !isRealPhoto(p));
       if (empty >= 0) entry.photos[empty] = url; else entry.photos.push(url);
-      await saveContent(STATE.content);
-      showToast("Foto hinzugefügt.");
+      const savedUrl = await persistContent();
+      render();
+      if (savedUrl) showToast("Foto hinzugefügt.");
     });
   });
 
@@ -3266,7 +3527,7 @@ function attachAdminHandlers() {
       if (!entry || !Array.isArray(entry.photos)) return;
       const ref = entry.photos[pi];
       entry.photos.splice(pi, 1);
-      await saveContent(STATE.content);
+      await persistContent();
       if (typeof ref === "string" && ref.startsWith("fs:")) {
         const id = ref.slice(3);
         delete PHOTO_CACHE[id];
@@ -3289,7 +3550,7 @@ function attachAdminHandlers() {
     btn.addEventListener("click", async () => {
       const idx = parseInt(btn.getAttribute("data-index"), 10);
       STATE.content.skillGroups.splice(idx, 1);
-      await saveContent(STATE.content);
+      await persistContent();
       render();
     });
   });
@@ -3305,8 +3566,7 @@ function attachAdminHandlers() {
           STATE.content.skillGroups[idx][field] = input.value;
         }
       });
-      await saveContent(STATE.content);
-      showToast("Gespeichert.");
+      await persistContent("Gespeichert.");
     });
   });
 
@@ -3325,6 +3585,226 @@ function attachAdminHandlers() {
   }
 }
 
+
+/* ============================================================
+   ADMIN: AUSWERTUNG (Logins, Klicks, Verlauf) + Gültigkeit/Sperren
+   ============================================================ */
+const EVENT_TAGS = { login: "Login", station: "Station", skill: "Kenntnis", match: "Passung", contact: "Kontakt", blocked: "Abgewiesen" };
+
+function adminNav(active) {
+  return `
+      <div class="crumbs admin-nav">
+        <span>Admin-Bereich</span>
+        <a href="#" id="nav-admin" class="${active === "admin" ? "on" : ""}">Verwaltung</a>
+        <a href="#" id="nav-stats" class="${active === "stats" ? "on" : ""}">Auswertung</a>
+      </div>`;
+}
+
+function revokeButton(code, c) {
+  return c.revokedAt
+    ? `<button class="icon-btn" data-action="unrevoke" data-code="${escapeHtml(code)}">Freigeben</button>`
+    : `<button class="icon-btn danger" data-action="revoke" data-code="${escapeHtml(code)}">Sperren</button>`;
+}
+
+async function loadStatsData() {
+  const fresh = await loadCompaniesChecked();
+  if (fresh) STATE.companies = fresh;
+  const codes = Object.keys(STATE.companies || {});
+  const lists = await Promise.all(codes.map(loadEvents));
+  STATE.events = {};
+  codes.forEach((cd, i) => { STATE.events[cd] = lists[i]; });
+  STATE.statsLoadedAt = Date.now();
+}
+async function openStats() {
+  await loadStatsData();
+  setRoute({ view: "admin_stats" });
+}
+
+function companyStats(code, c) {
+  const pv = c.pagesVisited || {};
+  const ev = (STATE.events && STATE.events[code]) || [];
+  const times = [c.lastLoginAt || 0, c.openedAt || 0];
+  Object.values(pv).forEach(t => times.push(t || 0));
+  ev.forEach(e => { if (e.t !== "blocked") times.push(e.at || 0); });
+  return { pages: Object.keys(pv).length, last: Math.max.apply(null, times), ev };
+}
+
+function renderAdminStats() {
+  if (!STATE.isAdminAuthed) return renderAdminLogin();
+  const rows = Object.entries(STATE.companies || {}).map(([code, c]) => ({ code, c, s: companyStats(code, c) }))
+    .sort((a, b) => (b.s.last ? 1 : 0) - (a.s.last ? 1 : 0) || b.s.last - a.s.last || (b.c.createdAt || 0) - (a.c.createdAt || 0));
+  const total = rows.length;
+  const opened = rows.filter(r => r.c.opened).length;
+  const cnt = { active: 0, expired: 0, revoked: 0 };
+  rows.forEach(r => { cnt[companyStatus(r.c)]++; });
+  const latest = rows.find(r => r.s.last);
+  if (!STATE.statsSel || !STATE.companies[STATE.statsSel]) STATE.statsSel = rows.length ? rows[0].code : null;
+
+  const cards = `
+    <div class="stat-cards">
+      <div class="stat-card"><div class="n">${total}</div><div class="l">Bewerbungen</div></div>
+      <div class="stat-card"><div class="n">${opened}<span class="of"> / ${total}</span></div><div class="l">Link geöffnet${total ? ` (${Math.round(opened / total * 100)} %)` : ""}</div></div>
+      <div class="stat-card"><div class="n">${cnt.active}</div><div class="l">Zugänge aktiv · ${cnt.expired} abgelaufen · ${cnt.revoked} gesperrt</div></div>
+      <div class="stat-card"><div class="n sm">${latest ? escapeHtml(latest.c.name) : "–"}</div><div class="l">Zuletzt aktiv${latest ? ": " + fmtDate(latest.s.last) : ""}</div></div>
+    </div>`;
+
+  const tableRows = rows.map(({ code, c, s }) => `
+      <tr class="${code === STATE.statsSel ? "sel" : ""}">
+        <td>${safeHex(c.accent) ? `<span class="swatch" style="background:${swatchBg(c.accent, c.accent2)}"></span>` : ""}<b>${escapeHtml(c.name)}</b>${c.tailored ? `<div class="tailor-pill">${escapeHtml(c.tailored.role || "Zuschnitt")}</div>` : ""}</td>
+        <td>${accessPill(c)}<div class="small-note" style="margin:3px 0 0">${escapeHtml(validityNote(c))}</div></td>
+        <td>${c.opened ? fmtDate(c.openedAt) : `<span class="pill pending">nicht geöffnet</span>`}</td>
+        <td>${c.logins ? c.logins : (c.opened ? "≥ 1" : "0")}</td>
+        <td>${s.last ? fmtDate(s.last) : "–"}</td>
+        <td>${s.pages}</td>
+        <td>${c.blocked ? `${c.blocked}<div class="small-note" style="margin:0">zuletzt ${fmtDate(c.lastBlockedAt)}</div>` : "0"}</td>
+        <td><button class="icon-btn" data-action="stats-select" data-code="${escapeHtml(code)}">Verlauf</button></td>
+      </tr>`).join("");
+
+  // Beliebteste Seiten über alle Bewerbungen (nur Stationen/Kenntnisse, Passungen sind je Bewerbung individuell)
+  const agg = {};
+  rows.forEach(({ code, c }) => Object.keys(c.pagesVisited || {}).forEach(k => {
+    if (k.indexOf("match:") === 0) return;
+    (agg[k] = agg[k] || { n: 0, code }).n++;
+  }));
+  const popular = Object.entries(agg).sort((a, b) => b[1].n - a[1].n).slice(0, 10)
+    .map(([k, v]) => `<tr><td>${escapeHtml(visitedLabel(k, v.code))}</td><td>${v.n} von ${opened}</td></tr>`).join("");
+
+  return `
+  <div class="app admin-shell wide">
+    <div class="topbar">
+      ${adminNav("stats")}
+      <div class="session"><a id="admin-logout" href="#" style="color:inherit;">Abmelden</a></div>
+    </div>
+
+    <div class="stat-head">
+      <button class="btn ghost" id="stats-refresh">Aktualisieren</button>
+      <span class="small-note" style="margin:0">Stand ${STATE.statsLoadedAt ? fmtDate(STATE.statsLoadedAt) : "–"}</span>
+    </div>
+    ${cards}
+
+    <div class="panel">
+      <h2>Auswertung pro Bewerbung</h2>
+      ${tableRows ? `<div class="table-scroll"><table class="simple">
+        <thead><tr><th>Firma</th><th>Zugang</th><th>Erster Aufruf</th><th>Logins</th><th>Zuletzt aktiv</th><th>Seiten</th><th>Abgewiesen</th><th></th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table></div>` : `<div class="empty-note">Noch keine Bewerbungen angelegt.</div>`}
+    </div>
+
+    ${STATE.statsSel ? renderStatsDetail(STATE.statsSel) : ""}
+
+    <div class="panel">
+      <h2>Was wird am häufigsten angesehen?</h2>
+      ${popular ? `<table class="simple"><thead><tr><th>Seite</th><th>Bewerbungen, die sie angesehen haben</th></tr></thead><tbody>${popular}</tbody></table>` : `<div class="empty-note">Noch keine Seitenaufrufe.</div>`}
+    </div>
+
+    <div class="panel">
+      <h2>So wird gezählt</h2>
+      <div class="small-note" style="margin:0">
+        Mitgeschrieben werden Logins, geöffnete Stationen, Kenntnisse, Passungen und Klicks auf Telefon, E-Mail und LinkedIn – nur bei Besuchen mit Passwort, nicht in der Admin-Vorschau. Ein Login entspricht einem Seitenaufruf mit Passworteingabe (nach Neuladen also ein neuer Login). Einzelne Klicks im Verlauf gibt es erst seit Einführung der Auswertung (max. ${EVENT_CAP} je Bewerbung); davor ist nur der letzte Aufruf je Seite bekannt.<br>
+        „Gesperrt“ und „Abgelaufen“ verhindern das Öffnen der Seite mit dem Passwort und werden bei jedem Klick geprüft. Das ist eine Zugangsschranke, kein technischer Schutz der Inhalte.
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderStatsDetail(code) {
+  const c = STATE.companies[code];
+  if (!c) return "";
+  const s = companyStats(code, c);
+  const ev = s.ev.slice().sort((a, b) => (b.at || 0) - (a.at || 0));
+  const countFor = (k) => ev.filter(e => e.k === k && (e.t === "station" || e.t === "skill" || e.t === "match")).length;
+  const pages = Object.entries(c.pagesVisited || {}).sort((a, b) => (b[1] || 0) - (a[1] || 0));
+  const pageRows = pages.map(([k, t]) => {
+    const n = countFor(k);
+    return `<tr><td>${escapeHtml(visitedLabel(k, code))}</td><td>${fmtDate(t)}</td><td>${n || "–"}</td></tr>`;
+  }).join("");
+  const evRows = ev.map(e => `<tr><td style="white-space:nowrap">${fmtDate(e.at)}</td><td><span class="tag t-${escapeHtml(e.t)}">${escapeHtml(EVENT_TAGS[e.t] || e.t)}</span></td><td>${escapeHtml(e.l || "")}</td></tr>`).join("");
+  const cd = escapeHtml(code);
+  return `
+    <div class="panel" id="stats-detail">
+      <h2>${escapeHtml(c.name)} <span style="font-size:14px;font-weight:400;color:var(--soft)">· Passwort <code>${escapeHtml(c.password)}</code></span></h2>
+      <div style="margin-bottom:12px">${accessPill(c)} <span class="small-note" style="margin:0 0 0 6px">${escapeHtml(validityNote(c))}</span></div>
+      <div class="access-ctrl">
+        <label>Gültig bis <input type="date" id="stat-expiry" value="${c.expiresAt ? toInputDate(c.expiresAt) : ""}"></label>
+        <button class="icon-btn" data-action="set-expiry" data-code="${cd}">Übernehmen</button>
+        <button class="icon-btn" data-action="extend" data-days="30" data-code="${cd}">+ 30 Tage</button>
+        <button class="icon-btn" data-action="extend" data-days="90" data-code="${cd}">+ 90 Tage</button>
+        <button class="icon-btn" data-action="unlimited" data-code="${cd}">Unbegrenzt</button>
+        <span class="spacer"></span>
+        ${revokeButton(code, c)}
+      </div>
+
+      <h3 class="stat-sub">Angesehene Seiten</h3>
+      ${pageRows ? `<table class="simple"><thead><tr><th>Seite</th><th>Zuletzt</th><th>Aufrufe*</th></tr></thead><tbody>${pageRows}</tbody></table>
+        <div class="small-note">* gezählt seit Einführung der Auswertung; „–“ = nur der letzte Aufruf ist bekannt.</div>` : `<div class="empty-note">Noch keine Seiten angesehen.</div>`}
+
+      <h3 class="stat-sub">Verlauf</h3>
+      ${evRows ? `<div class="tl-wrap"><table class="simple"><tbody>${evRows}</tbody></table></div>` : `<div class="empty-note">Noch keine Einzelereignisse protokolliert.</div>`}
+    </div>`;
+}
+
+function attachAdminNavHandlers() {
+  const toAdmin = document.getElementById("nav-admin");
+  if (toAdmin) toAdmin.addEventListener("click", (e) => { e.preventDefault(); if (STATE.route.view !== "admin") setRoute({ view: "admin" }); });
+  const toStats = document.getElementById("nav-stats");
+  if (toStats) toStats.addEventListener("click", async (e) => { e.preventDefault(); if (STATE.route.view !== "admin_stats") await openStats(); });
+}
+
+// Ergebnis einer Zugangsänderung melden und Ansicht aktualisieren
+function accessDone(r, okMsg) {
+  render();
+  if (!r.ok) showToast("Speichern fehlgeschlagen – die Änderung ist NICHT gesichert.", true);
+  else if (r.gone) showToast("Dieser Eintrag existiert nicht mehr.", true);
+  else showToast(typeof okMsg === "function" ? okMsg(r.co) : okMsg);
+}
+
+function attachAccessHandlers() {
+  const each = (action, fn) => document.querySelectorAll(`[data-action="${action}"]`).forEach(btn => btn.addEventListener("click", () => fn(btn, btn.getAttribute("data-code"))));
+  each("revoke", async (btn, code) => {
+    accessDone(await updateCompany(code, (co) => { co.revokedAt = Date.now(); }), "Zugang gesperrt.");
+  });
+  each("unrevoke", async (btn, code) => {
+    accessDone(await updateCompany(code, (co) => { delete co.revokedAt; }),
+      (co) => companyStatus(co) === "expired" ? "Freigegeben – die Gültigkeit ist aber abgelaufen, bitte verlängern." : "Zugang wieder freigegeben.");
+  });
+  each("set-expiry", async (btn, code) => {
+    const ts = fromInputDate((document.getElementById("stat-expiry") || {}).value);
+    if (!ts) { showToast("Bitte ein Datum wählen (oder „Unbegrenzt“)."); return; }
+    accessDone(await updateCompany(code, (co) => { co.expiresAt = ts; }),
+      (co) => ts <= Date.now() ? "Datum liegt in der Vergangenheit – der Zugang ist damit abgelaufen." : "Gültig bis " + fmtDay(ts) + ".");
+  });
+  each("extend", async (btn, code) => {
+    const days = parseInt(btn.getAttribute("data-days"), 10) || 30;
+    accessDone(await updateCompany(code, (co) => { co.expiresAt = endOfDay(Math.max(Date.now(), co.expiresAt || 0) + days * DAY_MS); }),
+      (co) => "Gültig bis " + fmtDay(co.expiresAt) + ".");
+  });
+  each("unlimited", async (btn, code) => {
+    accessDone(await updateCompany(code, (co) => { delete co.expiresAt; }), "Zugang ist jetzt unbegrenzt gültig.");
+  });
+}
+
+function attachAdminStatsHandlers() {
+  attachAdminNavHandlers();
+  attachAccessHandlers();
+  const logout = document.getElementById("admin-logout");
+  if (logout) logout.addEventListener("click", (e) => { e.preventDefault(); STATE.isAdminAuthed = false; setRoute({ view: "login" }); });
+  const rf = document.getElementById("stats-refresh");
+  if (rf) rf.addEventListener("click", async () => {
+    rf.disabled = true;
+    await loadStatsData();
+    render();
+    showToast("Aktualisiert.");
+  });
+  document.querySelectorAll('[data-action="stats-select"]').forEach(btn => {
+    btn.addEventListener("click", () => {
+      STATE.statsSel = btn.getAttribute("data-code");
+      render();
+      const d = document.getElementById("stats-detail");
+      if (d && d.scrollIntoView) d.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
 /* ============================================================
    MAIN RENDER DISPATCH
    ============================================================ */
@@ -3332,6 +3812,11 @@ function render() {
   const root = document.getElementById("root");
   if (STATE.content) ensureIds(STATE.content);
   let r = STATE.route;
+  // Besucher mit abgelaufenem/gesperrtem/gelöschtem Zugang kommen nicht weiter (auch nicht per Zurück-Taste)
+  if ((r.view === "home" || r.view === "detail" || r.view === "skill") && !STATE.isAdminAuthed) {
+    const _st = companyStatus(STATE.companies && STATE.companies[r.code]);
+    if (_st !== "active") { STATE.loginError = accessMessage(_st); r = STATE.route = { view: "login" }; }
+  }
   if (r.view === "detail" && !(STATE.content && Array.isArray(STATE.content[r.key]) && STATE.content[r.key][r.index])) {
     r = STATE.route = { view: "home", code: r.code };
   }
@@ -3347,6 +3832,7 @@ function render() {
   else if (r.view === "detail") html = renderDetail(r.code, r.key, r.index);
   else if (r.view === "admin_login") html = renderAdminLogin();
   else if (r.view === "admin") html = renderAdmin();
+  else if (r.view === "admin_stats") html = renderAdminStats();
 
   if (STATE.toast) html += `<div class="toast">${escapeHtml(STATE.toast)}</div>`;
 
@@ -3360,6 +3846,7 @@ function render() {
   else if (r.view === "detail") attachDetailHandlers(r.code, r.key);
   else if (r.view === "admin_login") attachAdminLoginHandlers();
   else if (r.view === "admin") attachAdminHandlers();
+  else if (r.view === "admin_stats") attachAdminStatsHandlers();
 
   hydratePhotos();
   if (STATE.pendingSub) {
