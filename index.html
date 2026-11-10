@@ -1436,7 +1436,8 @@ function genCode(len) {
 }
 function genPassword() {
   const words = ["fasttube", "presskit", "fuelcell", "porsche24", "blueprint", "torque", "headwind", "machwerk", "leichtbau", "kennlinie"];
-  return words[Math.floor(Math.random() * words.length)] + "-" + genCode(4);
+  // nur Buchstaben und Ziffern, ohne Bindestrich: Ein Doppeltipp (Handy) bzw. Doppelklick markiert so das ganze Passwort
+  return words[Math.floor(Math.random() * words.length)] + genCode(4);
 }
 
 function fmtDate(ts) {
