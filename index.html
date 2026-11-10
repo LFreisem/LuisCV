@@ -125,7 +125,9 @@ footer.page-footer {
 
 /* ---------- LEBENSLAUF ALS PDF (A4) ---------- */
 html.pdf-mode body::before { display: none !important; }
-.pdf-toolbar { background: #fff; border-bottom: 1px solid var(--line); padding: 14px 20px 12px; position: sticky; top: 0; z-index: 20; }
+.admin-bar.pdf-toolbar { border-bottom: 1px solid var(--line); }
+.pdf-toolbar .admin-bar-in { border-bottom: 1px solid var(--ink); max-width: none; padding-left: max(28px, calc((100% - 1280px) / 2 + 28px)); padding-right: max(28px, calc((100% - 1280px) / 2 + 28px)); }
+.pdf-ctl { padding: 10px max(28px, calc((100% - 1280px) / 2 + 28px)) 10px; }
 .pdf-controls { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 13.5px; }
 .pdf-controls label { display: flex; gap: 8px; align-items: center; }
 .pdf-controls select { font: inherit; font-size: 13.5px; padding: 6px 8px; border: 1px solid #b9b9b9; border-radius: var(--radius); max-width: 260px; }
@@ -166,7 +168,7 @@ html.pdf-mode body::before { display: none !important; }
 .pdf-note { margin: .15em 0 0 calc(27mm + 3.2mm); font-style: italic; color: var(--soft); font-size: .9em; }
 @media print {
   html.pdf-mode, html.pdf-mode body { background: #fff !important; min-height: 0; }
-  .pdf-toolbar, #toast-live { display: none !important; }
+  .pdf-toolbar, .admin-bar, #toast-live { display: none !important; }
   .pdf-stage { padding: 0; background: #fff; overflow: visible; }
   .pdf-sheet { box-shadow: none; margin: 0; }
 }
@@ -270,6 +272,29 @@ html.pdf-mode body::before { display: none !important; }
 .topbar .session { font-size: 12.5px; font-style: italic; color: var(--soft); text-align: right; }
 
 .admin-shell { max-width: 1000px; }
+
+/* ---------- ADMIN: angepinnte Leiste + Inhaltsverzeichnis ---------- */
+.admin-bar { position: sticky; top: 0; z-index: 30; background: #fff; border-bottom: 1px solid var(--ink); }
+.admin-bar-in { max-width: 1280px; margin: 0 auto; padding: 13px 28px 11px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; }
+.admin-bar .session { font-size: 12.5px; font-style: italic; color: var(--soft); text-align: right; white-space: nowrap; }
+.admin-frame { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 214px minmax(0, 1fr); align-items: start; }
+.admin-frame .app.admin-shell { margin: 0; width: 100%; max-width: 1000px; padding: 30px 28px 72px 8px; }
+.admin-frame.wide .app.admin-shell { max-width: none; }
+.admin-shell .panel, .admin-shell [data-toc] { scroll-margin-top: 64px; }
+.admin-toc { position: sticky; top: 47px; align-self: start; max-height: calc(100vh - 47px); overflow-y: auto; padding: 32px 14px 28px 28px; font-size: 13.5px; line-height: 1.35; }
+.admin-toc .toc-title { font-size: 12.5px; font-style: italic; color: var(--soft); margin-bottom: 6px; }
+.admin-toc .toc-group { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--soft); margin: 16px 0 4px; }
+.admin-toc a { display: block; padding: 4px 0 4px 10px; color: var(--soft); text-decoration: none; border-left: 2px solid transparent; }
+.admin-toc a:hover { color: var(--ink); }
+.admin-toc a.on { color: var(--ink); border-left-color: var(--ink); }
+.dev-cell { font-size: 12.5px; white-space: nowrap; }
+.dev-cell .soft { color: var(--soft); }
+@media (max-width: 900px) {
+  .admin-frame { display: block; }
+  .admin-toc { display: none; }
+  .admin-frame .app.admin-shell { padding: 22px 18px 56px; }
+  .admin-bar-in { padding: 10px 18px; }
+}
 .panel { background: #fff; border: 1px solid #c9c9c9; border-radius: var(--radius); padding: 20px 22px; margin-bottom: 20px; }
 .panel h2 { font-size: 20px; margin-bottom: 14px; }
 
@@ -309,7 +334,7 @@ table.simple tr.sel td { background: var(--hover); }
 .tag.t-contact { background: #e7edf8; color: #1f4d99; }
 .tag.t-skill { background: #f3ecf7; color: #5b3a73; }
 .tag.t-blocked { background: #f6e3e3; color: var(--err); }
-.inline-form .color-pick select { flex: none; padding: 6px 8px; font: inherit; font-size: 14px; border: 1px solid #b9b9b9; border-radius: var(--radius); }
+.inline-form .color-pick select { flex: 0 1 auto; min-width: 0; max-width: 100%; padding: 6px 8px; font: inherit; font-size: 14px; border: 1px solid #b9b9b9; border-radius: var(--radius); }
 
 .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .icon-btn { background: none; border: 1px solid #c9c9c9; border-radius: var(--radius); cursor: pointer; font: inherit; font-size: 12.5px; padding: 3px 8px; color: var(--soft); }
@@ -317,7 +342,7 @@ table.simple tr.sel td { background: var(--hover); }
 .icon-btn.danger:hover { border-color: var(--err); color: var(--err); }
 .icon-btn[disabled] { opacity: .35; cursor: default; }
 
-.color-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--soft); }
+.color-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--soft); max-width: 100%; }
 .inline-form .color-pick { align-self: center; }
 input[type=color] { width: 36px; height: 28px; padding: 0; border: 1px solid #c9c9c9; border-radius: var(--radius); background: none; cursor: pointer; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; border: 1px solid rgba(0,0,0,.2); vertical-align: baseline; }
@@ -1844,11 +1869,12 @@ function renderCvPdf() {
   }
 
   return `
-  <div class="pdf-toolbar">
-    <div class="topbar" style="margin-bottom:10px;padding-bottom:10px">
+  <div class="admin-bar pdf-toolbar">
+    <div class="admin-bar-in">
       ${adminNav("pdf")}
       <div class="session"><a id="admin-logout" href="#" style="color:inherit;">Abmelden</a></div>
     </div>
+    <div class="pdf-ctl">
     <div class="pdf-controls">
       <label>Bewerbung
         <select id="pdf-company"><option value="">Allgemein (Standardfarben)</option>${opts}</select>
@@ -1858,6 +1884,7 @@ function renderCvPdf() {
       <span class="pdf-info" id="pdf-info"></span>
     </div>
     <div class="small-note" style="margin-top:6px">Im Druckdialog als Ziel „Als PDF speichern“ wählen. Der Dateiname ist vorbelegt. Der Inhalt kommt aus Profil, Berufserfahrung, Ausbildung und Kenntnissen weiter unten im Admin-Bereich.</div>
+    </div>
   </div>
   <div class="pdf-stage">
     <div class="pdf-sheet" id="pdf-sheet">
@@ -1987,6 +2014,78 @@ function updateCompany(code, fn) {
   return run;
 }
 
+/* ---------- Geräteerkennung (zählt Browser, nicht Personen) ----------
+   Beim ersten protokollierten Ereignis erzeugt der Browser eine zufällige Kennung und merkt sie sich lokal.
+   Dazu kommt eine grobe Angabe aus dem User-Agent (z. B. "iPhone · Safari"). Keine IP-Adressen. */
+const DEVICE_KEY = "cv_device_id";
+let DEVICE_ID = "";
+function deviceId() {
+  if (DEVICE_ID) return DEVICE_ID;
+  let id = "";
+  try { id = localStorage.getItem(DEVICE_KEY) || ""; } catch (e) {}
+  if (!/^[a-z0-9]{8,24}$/.test(id)) {
+    try {
+      const a = new Uint8Array(8);
+      crypto.getRandomValues(a);
+      id = Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+    } catch (e) {
+      id = Math.random().toString(36).slice(2, 14).padEnd(12, "0");
+    }
+    try { localStorage.setItem(DEVICE_KEY, id); } catch (e) {}   // ohne Speicher: neue Kennung je Seitenaufruf
+  }
+  DEVICE_ID = id;
+  return id;
+}
+function ownDeviceId() {                      // Kennung dieses Browsers, ohne eine neue anzulegen
+  try { return localStorage.getItem(DEVICE_KEY) || ""; } catch (e) { return ""; }
+}
+function deviceLabel(ua, touch) {
+  if (ua === undefined) ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
+  if (touch === undefined) touch = (typeof navigator !== "undefined" && navigator.maxTouchPoints) || 0;
+  const ios = /iPhone|iPod/.test(ua) ? "iPhone" : (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch > 1)) ? "iPad" : "";
+  let os = "Gerät";
+  if (ios) os = ios;
+  else if (/Android/.test(ua)) os = /Mobile/.test(ua) ? "Android-Handy" : "Android-Tablet";
+  else if (/Windows/.test(ua)) os = "Windows";
+  else if (/CrOS/.test(ua)) os = "ChromeOS";
+  else if (/Macintosh|Mac OS X/.test(ua)) os = "Mac";
+  else if (/Linux|X11/.test(ua)) os = "Linux";
+  let br;
+  if (/LinkedInApp/i.test(ua)) br = "LinkedIn-App";
+  else if (/FBAN|FBAV|FB_IAB/.test(ua)) br = "Facebook-App";
+  else if (/Instagram/i.test(ua)) br = "Instagram-App";
+  else if (/EdgiOS|EdgA|Edg\//.test(ua)) br = "Edge";
+  else if (/OPR\/|OPiOS/.test(ua)) br = "Opera";
+  else if (/SamsungBrowser/.test(ua)) br = "Samsung Internet";
+  else if (/FxiOS|Firefox\//.test(ua)) br = "Firefox";
+  else if (/CriOS|Chrome\//.test(ua)) br = /; wv\)/.test(ua) ? "In-App-Browser" : "Chrome";
+  else if (/Safari\//.test(ua)) br = "Safari";
+  else if (ios) br = "In-App-Browser";        // iOS ohne Safari-Kennung = eingebetteter Browser (Mail, Messenger, …)
+  else br = "Browser";
+  return os + " · " + br;
+}
+// Geräte einer Bewerbung aus den Ereignissen; Nummerierung nach erstem Auftreten (Gerät 1 = zuerst gesehen)
+function deviceSummary(ev) {
+  const map = new Map();
+  ev.slice().sort((a, b) => (a.at || 0) - (b.at || 0)).forEach((e) => {
+    if (!e || !e.d) return;
+    let x = map.get(e.d);
+    if (!x) { x = { id: e.d, label: e.u || "Unbekannt", first: e.at || 0, last: e.at || 0, n: 0, logins: 0 }; map.set(e.d, x); }
+    x.last = Math.max(x.last, e.at || 0);
+    x.n++;
+    if (e.t === "login") x.logins++;
+    if (e.u) x.label = e.u;
+  });
+  return Array.from(map.values());
+}
+function deviceCellHtml(devices) {
+  if (!devices.length) return "–";
+  const byLabel = {};
+  devices.forEach((d) => { byLabel[d.label] = (byLabel[d.label] || 0) + 1; });
+  const parts = Object.entries(byLabel).map(([l, n]) => escapeHtml(l) + (n > 1 ? " ×" + n : "")).join(", ");
+  return `${devices.length > 1 ? "<b>" + devices.length + "</b>" : devices.length}<div class="small-note" style="margin:0">${parts}</div>`;
+}
+
 // Einzelereignisse je Bewerbung (eigenes Dokument, damit die Firmenliste klein bleibt)
 let EVENT_CHAIN = Promise.resolve();
 function logEvent(code, type, key, label) {
@@ -1998,7 +2097,7 @@ function logEvent(code, type, key, label) {
       let list = [];
       if (r.value) { try { list = JSON.parse(r.value); } catch (e) { list = []; } }
       if (!Array.isArray(list)) list = [];
-      list.push({ t: type, k: key || "", l: String(label || "").slice(0, 160), at: Date.now() });
+      list.push({ t: type, k: key || "", l: String(label || "").slice(0, 160), at: Date.now(), d: deviceId(), u: deviceLabel() });
       if (list.length > EVENT_CAP) list = list.slice(-EVENT_CAP);
       await storageSet(EVENTS_PREFIX + code, JSON.stringify(list));
     } catch (err) {
@@ -3333,13 +3432,12 @@ function renderAdmin() {
   const c = STATE.content;
 
   return `
+  ${adminBar("admin")}
+  <div class="admin-frame">
+  <nav class="admin-toc" id="admin-toc" aria-label="Inhalt"></nav>
   <div class="app admin-shell">
-    <div class="topbar">
-      ${adminNav("admin")}
-      <div class="session"><a id="admin-logout" href="#" style="color:inherit;">Abmelden</a></div>
-    </div>
 
-    <div class="panel">
+    <div class="panel" data-toc-group="Bewerbungen">
       <h2>Neue Bewerbung anlegen</h2>
       <div class="inline-form">
         <input id="new-company-name" type="text" placeholder="Firmenname, z. B. Porsche AG" />
@@ -3363,7 +3461,7 @@ function renderAdmin() {
     </div>
 
     ${renderTailorPanel()}
-    <div class="panel">
+    <div class="panel" data-toc-group="Lebenslauf-Inhalt">
       <h2>Profil &amp; Kontakt</h2>
       <div class="editor-field"><label>Name</label><input data-field="name" value="${escapeHtml(c.name)}"/></div>
       <div class="editor-field"><label>Rolle / Titel</label><input data-field="role" value="${escapeHtml(c.role)}"/></div>
@@ -3383,7 +3481,7 @@ function renderAdmin() {
     ${renderSkillsEditor(c.skillGroups)}
     ${renderSkillPagesEditor(c)}
 
-    <div class="panel">
+    <div class="panel" data-toc-group="Zugang">
       <h2>Admin-Passwort ändern</h2>
       <div class="inline-form">
         <input id="new-admin-pw" type="password" placeholder="Neues Admin-Passwort" />
@@ -3392,6 +3490,7 @@ function renderAdmin() {
       <div class="small-note">Gilt sofort für den nächsten Admin-Login.</div>
     </div>
 
+  </div>
   </div>`;
 }
 
@@ -3800,6 +3899,65 @@ function adminNav(active) {
       </div>`;
 }
 
+// Angepinnte Leiste: bleibt beim Scrollen oben stehen
+function adminBar(active) {
+  return `
+  <div class="admin-bar">
+    <div class="admin-bar-in">
+      ${adminNav(active)}
+      <div class="session"><a id="admin-logout" href="#" style="color:inherit;">Abmelden</a></div>
+    </div>
+  </div>`;
+}
+
+/* Inhaltsverzeichnis links: wird nach dem Rendern aus den Bereichen der Seite aufgebaut
+   (Panels bzw. Elemente mit data-toc; data-toc-group setzt eine Gruppenüberschrift). */
+function buildAdminToc() {
+  const nav = document.getElementById("admin-toc");
+  if (!nav) return;
+  const els = Array.from(document.querySelectorAll(".admin-shell .panel, .admin-shell [data-toc]"));
+  let html = "", n = 0;
+  els.forEach((el) => {
+    if (el.parentElement && el.parentElement.closest(".panel")) return;    // nur oberste Ebene
+    const h2 = el.querySelector("h2");
+    const title = (el.getAttribute("data-toc") || (h2 ? h2.textContent : "")).replace(/\s+/g, " ").trim();
+    if (!title) return;
+    if (!el.id) el.id = "sec-" + n;
+    n++;
+    const grp = el.getAttribute("data-toc-group");
+    if (grp) html += `<div class="toc-group">${escapeHtml(grp)}</div>`;
+    html += `<a href="#${escapeHtml(el.id)}" data-toc-for="${escapeHtml(el.id)}">${escapeHtml(title)}</a>`;
+  });
+  nav.innerHTML = `<div class="toc-title">Inhalt</div>` + html;
+  nav.querySelectorAll("a[data-toc-for]").forEach((a) => a.addEventListener("click", (e) => {
+    e.preventDefault();
+    const t = document.getElementById(a.getAttribute("data-toc-for"));
+    if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  updateAdminTocActive();
+}
+function updateAdminTocActive() {
+  const nav = document.getElementById("admin-toc");
+  if (!nav) return;
+  const links = Array.from(nav.querySelectorAll("a[data-toc-for]"));
+  if (!links.length) return;
+  let cur = links[0];
+  for (const a of links) {
+    const t = document.getElementById(a.getAttribute("data-toc-for"));
+    if (t && t.getBoundingClientRect().top <= 110) cur = a;
+  }
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = links[links.length - 1];
+  links.forEach((a) => a.classList.toggle("on", a === cur));
+}
+let _tocTick = false;
+function onTocScroll() {
+  if (_tocTick) return;
+  _tocTick = true;
+  requestAnimationFrame(() => { _tocTick = false; updateAdminTocActive(); });
+}
+window.addEventListener("scroll", onTocScroll, { passive: true });
+window.addEventListener("resize", onTocScroll);
+
 function revokeButton(code, c) {
   return c.revokedAt
     ? `<button class="icon-btn" data-action="unrevoke" data-code="${escapeHtml(code)}">Freigeben</button>`
@@ -3826,7 +3984,7 @@ function companyStats(code, c) {
   const times = [c.lastLoginAt || 0, c.openedAt || 0];
   Object.values(pv).forEach(t => times.push(t || 0));
   ev.forEach(e => { if (e.t !== "blocked") times.push(e.at || 0); });
-  return { pages: Object.keys(pv).length, last: Math.max.apply(null, times), ev };
+  return { pages: Object.keys(pv).length, last: Math.max.apply(null, times), ev, devices: deviceSummary(ev) };
 }
 
 function renderAdminStats() {
@@ -3854,6 +4012,7 @@ function renderAdminStats() {
         <td>${accessPill(c)}<div class="small-note" style="margin:3px 0 0">${escapeHtml(validityNote(c))}</div></td>
         <td>${c.opened ? fmtDate(c.openedAt) : `<span class="pill pending">nicht geöffnet</span>`}</td>
         <td>${c.logins ? c.logins : (c.opened ? "≥ 1" : "0")}</td>
+        <td>${deviceCellHtml(s.devices)}</td>
         <td>${s.last ? fmtDate(s.last) : "–"}</td>
         <td>${s.pages}</td>
         <td>${c.blocked ? `${c.blocked}<div class="small-note" style="margin:0">zuletzt ${fmtDate(c.lastBlockedAt)}</div>` : "0"}</td>
@@ -3870,22 +4029,21 @@ function renderAdminStats() {
     .map(([k, v]) => `<tr><td>${escapeHtml(visitedLabel(k, v.code))}</td><td>${v.n} von ${opened}</td></tr>`).join("");
 
   return `
+  ${adminBar("stats")}
+  <div class="admin-frame wide">
+  <nav class="admin-toc" id="admin-toc" aria-label="Inhalt"></nav>
   <div class="app admin-shell wide">
-    <div class="topbar">
-      ${adminNav("stats")}
-      <div class="session"><a id="admin-logout" href="#" style="color:inherit;">Abmelden</a></div>
-    </div>
 
     <div class="stat-head">
       <button class="btn ghost" id="stats-refresh">Aktualisieren</button>
       <span class="small-note" style="margin:0">Stand ${STATE.statsLoadedAt ? fmtDate(STATE.statsLoadedAt) : "–"}</span>
     </div>
-    ${cards}
+    <div data-toc="Kennzahlen">${cards}</div>
 
     <div class="panel">
       <h2>Auswertung pro Bewerbung</h2>
       ${tableRows ? `<div class="table-scroll"><table class="simple">
-        <thead><tr><th>Firma</th><th>Zugang</th><th>Erster Aufruf</th><th>Logins</th><th>Zuletzt aktiv</th><th>Seiten</th><th>Abgewiesen</th><th></th></tr></thead>
+        <thead><tr><th>Firma</th><th>Zugang</th><th>Erster Aufruf</th><th>Logins</th><th>Geräte</th><th>Zuletzt aktiv</th><th>Seiten</th><th>Abgewiesen</th><th></th></tr></thead>
         <tbody>${tableRows}</tbody>
       </table></div>` : `<div class="empty-note">Noch keine Bewerbungen angelegt.</div>`}
     </div>
@@ -3901,9 +4059,11 @@ function renderAdminStats() {
       <h2>So wird gezählt</h2>
       <div class="small-note" style="margin:0">
         Mitgeschrieben werden Logins, geöffnete Stationen, Kenntnisse, Passungen und Klicks auf Telefon, E-Mail und LinkedIn – nur bei Besuchen mit Passwort, nicht in der Admin-Vorschau. Ein Login entspricht einem Seitenaufruf mit Passworteingabe (nach Neuladen also ein neuer Login). Einzelne Klicks im Verlauf gibt es erst seit Einführung der Auswertung (max. ${EVENT_CAP} je Bewerbung); davor ist nur der letzte Aufruf je Seite bekannt.<br>
-        „Gesperrt“ und „Abgelaufen“ verhindern das Öffnen der Seite mit dem Passwort und werden bei jedem Klick geprüft. Das ist eine Zugangsschranke, kein technischer Schutz der Inhalte.
+        „Gesperrt“ und „Abgelaufen“ verhindern das Öffnen der Seite mit dem Passwort und werden bei jedem Klick geprüft. Das ist eine Zugangsschranke, kein technischer Schutz der Inhalte.<br>
+        Geräte: Beim ersten Ereignis legt der Browser eine zufällige Kennung an und merkt sie sich lokal, dazu kommt eine grobe Angabe wie „iPhone · Safari“. Gezählt werden also Browser, nicht Personen: Privater Modus, gelöschte Browserdaten, eingebettete Browser (Mail, LinkedIn, Messenger) und Safari nach sieben Tagen ohne Besuch ergeben ein neues „Gerät“. Zwei Geräte derselben Art (zwei iPhones) bleiben getrennt. IP-Adressen werden nicht erfasst. Ereignisse aus der Zeit davor haben keine Geräteangabe.
       </div>
     </div>
+  </div>
   </div>`;
 }
 
@@ -3918,10 +4078,15 @@ function renderStatsDetail(code) {
     const n = countFor(k);
     return `<tr><td>${escapeHtml(visitedLabel(k, code))}</td><td>${fmtDate(t)}</td><td>${n || "–"}</td></tr>`;
   }).join("");
-  const evRows = ev.map(e => `<tr><td style="white-space:nowrap">${fmtDate(e.at)}</td><td><span class="tag t-${escapeHtml(e.t)}">${escapeHtml(EVENT_TAGS[e.t] || e.t)}</span></td><td>${escapeHtml(e.l || "")}</td></tr>`).join("");
+  const devIdx = {};
+  s.devices.forEach((d, i) => { devIdx[d.id] = i + 1; });
+  const evRows = ev.map(e => `<tr><td style="white-space:nowrap">${fmtDate(e.at)}</td><td><span class="tag t-${escapeHtml(e.t)}">${escapeHtml(EVENT_TAGS[e.t] || e.t)}</span></td><td>${escapeHtml(e.l || "")}</td><td class="dev-cell">${e.d && devIdx[e.d] ? "Gerät " + devIdx[e.d] + `<span class="soft"> · ${escapeHtml(e.u || "")}</span>` : "–"}</td></tr>`).join("");
+  const own = ownDeviceId();
+  const devRows = s.devices.map((d, i) => `<tr><td style="white-space:nowrap">Gerät ${i + 1}${d.id === own ? ` <span class="tag">dieses Gerät</span>` : ""}</td><td>${escapeHtml(d.label)}</td><td>${fmtDate(d.first)}</td><td>${fmtDate(d.last)}</td><td>${d.logins}</td><td>${d.n}</td></tr>`).join("");
+  const noDev = ev.filter(e => !e.d).length;
   const cd = escapeHtml(code);
   return `
-    <div class="panel" id="stats-detail">
+    <div class="panel" id="stats-detail" data-toc="Verlauf: ${escapeHtml(c.name)}">
       <h2>${escapeHtml(c.name)} <span style="font-size:14px;font-weight:400;color:var(--soft)">· Passwort <code>${escapeHtml(c.password)}</code></span></h2>
       <div style="margin-bottom:12px">${accessPill(c)} <span class="small-note" style="margin:0 0 0 6px">${escapeHtml(validityNote(c))}</span></div>
       <div class="access-ctrl">
@@ -3933,6 +4098,10 @@ function renderStatsDetail(code) {
         <span class="spacer"></span>
         ${revokeButton(code, c)}
       </div>
+
+      <h3 class="stat-sub">Geräte</h3>
+      ${devRows ? `<table class="simple"><thead><tr><th></th><th>Art</th><th>Erster Aufruf</th><th>Zuletzt</th><th>Logins</th><th>Ereignisse</th></tr></thead><tbody>${devRows}</tbody></table>
+        <div class="small-note">Gezählt werden Browser, nicht Personen. „Dieses Gerät“ = der Browser, in dem du gerade bist (z. B. eigene Testlogins).${noDev ? ` ${noDev} ältere Ereignisse ohne Geräteangabe.` : ""}</div>` : `<div class="empty-note">Noch keine Geräteangaben${ev.length ? " (die vorhandenen Ereignisse stammen aus der Zeit vor der Geräteerkennung)" : ""}.</div>`}
 
       <h3 class="stat-sub">Angesehene Seiten</h3>
       ${pageRows ? `<table class="simple"><thead><tr><th>Seite</th><th>Zuletzt</th><th>Aufrufe*</th></tr></thead><tbody>${pageRows}</tbody></table>
@@ -4052,6 +4221,7 @@ function render() {
   else if (r.view === "admin") attachAdminHandlers();
   else if (r.view === "admin_stats") attachAdminStatsHandlers();
   else if (r.view === "cv_pdf") attachCvPdfHandlers();
+  if (r.view === "admin" || r.view === "admin_stats") buildAdminToc();
 
   // PDF-Ansicht: Seitenformat A4 ohne Rand (nur dort), Dateiname für "Als PDF speichern"
   const isPdf = r.view === "cv_pdf" && STATE.isAdminAuthed;
